@@ -19,3 +19,14 @@
 - 작업물 원본(`works/` 안)은 사이트 스타일과 독립적이다. 사이트 CSS를 작업물에 섞지 않는다.
 - 이미 공유한 주소는 지우지 말고, 옮길 때는 리다이렉트를 남긴다 (예: `pull-trigger/`).
 - 사내 미공개 정보가 보이면 올리기 전에 알린다.
+
+## 앱 코드와 연동된 작업물
+
+`works/next-episode/state-simulator/`는 Manta 앱 코드(~/dev/client/app, 다음 화 전환 기능)를 기준으로 동작한다.
+앱의 다음 화 전환 코드를 고친 뒤에는 이 작업물도 같이 맞춘다.
+
+1. `node tools/sync-next-episode-spec.mjs` 실행 → 거리 · 문구 · 색 · 글자 크기가 `spec.json`에 자동 반영된다.
+2. 종료 코드 2(⚠ 동작 로직이 바뀐 파일 목록)가 나오면, 그 파일의 바뀐 분기를 `index.html`의 Sim 클래스 · GROUPS에 옮긴다.
+   반영 전까지 페이지 상단에 "아직 반영 전" 경고가 뜬다.
+3. 로컬 서버로 바뀐 상태를 직접 조작해 확인한 뒤 `--reviewed`로 다시 실행해 경고를 지운다.
+4. `data/projects.json`의 작업물 date를 오늘로 바꾸고, commit · push 전에 확인받는다.

@@ -1,0 +1,324 @@
+{
+  "source": {
+    "branch": "jiyeon/app/feat/auto-next-episode",
+    "commit": "79936ea428",
+    "uncommittedFiles": 21,
+    "syncedAt": "2026-10-15T02:46:05.478Z"
+  },
+  "constants": {
+    "pullAreaHeight": 160,
+    "guideHeight": 112,
+    "releaseTolerance": 4,
+    "guideFollowDivisor": 2,
+    "ringSize": 32,
+    "ringStroke": 2,
+    "ringReachedRange": [
+      0,
+      0.95,
+      0.975
+    ],
+    "swipeDistance": 128,
+    "dismissRatio": 0.3,
+    "dismissVelocity": 500,
+    "footerInMs": 300,
+    "webtoonControlHeight": 52,
+    "ebookControlHeight": 86,
+    "freePassToastBottom": 70,
+    "indicator": "ring"
+  },
+  "strings": {
+    "t_keep_scrolling_for_the_next_episode": "Keep scrolling for the next episode",
+    "t_next_episode": "Next Episode",
+    "t_next_episode_coming_soon": "Next episode coming soon",
+    "t_episode_$ord": "Episode {{ord}}",
+    "t_up_to_date": "Up to date!",
+    "t_you_ve_finished_it": "You’ve finished it!",
+    "t_unlock_this_episode": "Unlock this episode",
+    "t_unlock_next_episode": "Unlock next episode",
+    "t_unlock_with_gems_to_continue": "Unlock with Gems to continue!",
+    "t_free_pass_available": "Free Pass available",
+    "t_add_to_your_unlocked_library_with_gems": "Add to your Unlocked library with Gems",
+    "t_list": "List",
+    "t_okay": "Okay",
+    "t_close": "Close",
+    "t_notify_me": "Notify me",
+    "t_turn_on_notifications_to_stay_updated": "Turn on notifications to stay updated",
+    "t_you_re_all_set_we_ll_notify_you_when_the_next_episode_is_available": "You're all set! We'll notify you when the next episode is available.",
+    "t_a_free_pass_has_been_used": "A <0>Free Pass</0> has been used",
+    "t_buy_episode": "Unlock episode",
+    "t_fill_up_gems": "Fill up Gems",
+    "t_this_series_is_protected_under_copyright_law#2": "This series is protected under copyright law.",
+    "t_my_gems": "My Gems",
+    "t_single_episode": "Single Episode",
+    "t_$count_gems#2_other": "{{count}} Gems",
+    "t_comments": "Comments",
+    "t_reply": "Reply"
+  },
+  "text": {
+    "display4Sb": {
+      "size": 34,
+      "line": 44,
+      "weight": 600
+    },
+    "display4M": {
+      "size": 34,
+      "line": 44,
+      "weight": 500
+    },
+    "display4R": {
+      "size": 34,
+      "line": 44,
+      "weight": 400
+    },
+    "display3Sb": {
+      "size": 32,
+      "line": 40,
+      "weight": 600
+    },
+    "display3M": {
+      "size": 32,
+      "line": 40,
+      "weight": 500
+    },
+    "display3R": {
+      "size": 32,
+      "line": 40,
+      "weight": 400
+    },
+    "display2Sb": {
+      "size": 28,
+      "line": 36,
+      "weight": 600
+    },
+    "display2M": {
+      "size": 28,
+      "line": 36,
+      "weight": 500
+    },
+    "display2R": {
+      "size": 28,
+      "line": 36,
+      "weight": 400
+    },
+    "display1Sb": {
+      "size": 24,
+      "line": 28,
+      "weight": 600
+    },
+    "display1M": {
+      "size": 24,
+      "line": 28,
+      "weight": 400
+    },
+    "display1R": {
+      "size": 24,
+      "line": 28,
+      "weight": 400
+    },
+    "title3Sb": {
+      "size": 22,
+      "line": 26,
+      "weight": 600
+    },
+    "title3M": {
+      "size": 22,
+      "line": 26,
+      "weight": 500
+    },
+    "title3R": {
+      "size": 22,
+      "line": 26,
+      "weight": 400
+    },
+    "title2Sb": {
+      "size": 20,
+      "line": 24,
+      "weight": 600
+    },
+    "title2M": {
+      "size": 20,
+      "line": 24,
+      "weight": 500
+    },
+    "title2R": {
+      "size": 20,
+      "line": 24,
+      "weight": 400
+    },
+    "title1Sb": {
+      "size": 18,
+      "line": 24,
+      "weight": 600
+    },
+    "title1M": {
+      "size": 18,
+      "line": 24,
+      "weight": 500
+    },
+    "title1R": {
+      "size": 18,
+      "line": 24,
+      "weight": 400
+    },
+    "body3Sb": {
+      "size": 16,
+      "line": 20,
+      "weight": 600
+    },
+    "body3M": {
+      "size": 16,
+      "line": 20,
+      "weight": 500
+    },
+    "body3R": {
+      "size": 16,
+      "line": 20,
+      "weight": 400
+    },
+    "body2Sb": {
+      "size": 14,
+      "line": 18,
+      "weight": 600
+    },
+    "body2M": {
+      "size": 14,
+      "line": 18,
+      "weight": 500
+    },
+    "body2R": {
+      "size": 14,
+      "line": 18,
+      "weight": 400
+    },
+    "body1Sb": {
+      "size": 12,
+      "line": 16,
+      "weight": 600
+    },
+    "body1M": {
+      "size": 12,
+      "line": 16,
+      "weight": 500
+    },
+    "body1R": {
+      "size": 12,
+      "line": 16,
+      "weight": 400
+    },
+    "captionSb": {
+      "size": 10,
+      "line": 12,
+      "weight": 600
+    },
+    "captionM": {
+      "size": 10,
+      "line": 12,
+      "weight": 500
+    },
+    "captionR": {
+      "size": 10,
+      "line": 12,
+      "weight": 400
+    }
+  },
+  "color": {
+    "brandBase": "#4D4AFF",
+    "brandHighlight": "#E54ACF",
+    "brandPositive": "#00A391",
+    "brandNegative": "#BA002E",
+    "textPrimary": "#EDF0F7",
+    "textSecondary": "#C2C7D4",
+    "textTertiary": "#999CA8",
+    "textPlaceholder": "#737885",
+    "textDisabled": "#545763",
+    "textBrand": "#6166FF",
+    "textPositive": "#66D4B2",
+    "textAlert": "#FF2447",
+    "textPrimaryInverse": "#14171C",
+    "textSecondaryInverse": "#545763",
+    "textDisabledInverse": "#C2C7D4",
+    "textBrandInverse": "#4D4AFF",
+    "textPositiveInverse": "#00A391",
+    "surfaceBottom": "#000000",
+    "surfaceBase": "#0D0F12",
+    "containerBase": "#1F2129",
+    "containerHigh": "#2B2E36",
+    "containerHighest": "#40424D",
+    "containerInverse": "#DEE3EB",
+    "containerInverseHigh": "#EDF0F7",
+    "containerBrand": "#4D4AFF",
+    "containerPositive": "#1A6E70",
+    "containerNegative": "#BA002E",
+    "overlayDim": "#00000033",
+    "overlayDisabled": "#00000066",
+    "overlayDisabledHigh": "#000000B2",
+    "borderBase": "#40424D",
+    "borderMute": "#2B2E36",
+    "borderAccent": "#999CA8",
+    "borderBrand": "#6166FF",
+    "borderHighlight": "#E54ACF",
+    "borderPositive": "#00A391",
+    "borderNegative": "#FF2447",
+    "brandDisabled": "#1F1F45",
+    "brandMute": "#3B36C7",
+    "darkGray01": "#EDF0F7",
+    "darkGray02": "#DEE3EB",
+    "darkGray03": "#C2C7D4",
+    "darkGray04": "#999CA8",
+    "darkGray05": "#999CA8",
+    "darkGray06": "#737885",
+    "darkGray07": "#545763",
+    "darkGray08": "#40424D",
+    "darkGray09": "#2B2E36",
+    "darkGray10": "#1F2129",
+    "darkGray11": "#14171C",
+    "darkGray12": "#0D0F12",
+    "green01": "#66D4B2",
+    "green02": "#00A391",
+    "green03": "#00A391",
+    "pink01": "#F87DE4",
+    "popupGray01": "#1F2129",
+    "purple01": "#6166FF",
+    "purple02": "#6166FF",
+    "red01": "#FF2447",
+    "red02": "#FF2447",
+    "spinnerPurple01": "#808AED"
+  },
+  "sourceHashes": {
+    "getGestureNextAction.ts": "25e80a91a356",
+    "useGestureNextGuide.ts": "38f777adda3b",
+    "useEpisodeAction.ts": "fe6b1443bc5e",
+    "EpisodeSection/index.tsx": "8ed1141f8fab",
+    "useViewerFooterAnimation.ts": "42bfd02c6d7c",
+    "ViewerFooterContainer.tsx": "9488db7fd5c6",
+    "NextEpisodeRevealGuide.tsx": "0842d39fef62",
+    "PullNextGuide/index.tsx": "8b3080878874",
+    "PullProgressRing.tsx": "7580c80c426a",
+    "ImageVerticalViewer/index.tsx (당김 영역)": "d8a62ab5505e",
+    "RootOriginal.tsx (구매 시트 · 이동)": "2f9696256aee",
+    "화면: components/pages/EpisodeViewer/ViewerFooter/index.tsx": "dd95b9fac928",
+    "화면: components/pages/EpisodeViewer/ViewerFooter/styles.ts": "e4bab90c0a16",
+    "화면: components/pages/EpisodeViewer/ViewerFooter/EpisodeSection/styles.ts": "62b96ea04140",
+    "화면: components/pages/EpisodeViewer/Footer/EpisodeCommentPreview/index.tsx": "b0ea049bbe60",
+    "화면: components/blocks/bm/PurchaseEpisodeModal/Ui202509/index.tsx": "fa75e9867dd0",
+    "화면: components/blocks/bm/PurchaseEpisodeModal/Ui202509/styles.ts": "640416589aba",
+    "화면: components/blocks/bm/PurchaseEpisodeModal/Ui202509/OptionItem/index.tsx": "cc86d578eda8",
+    "화면: components/blocks/bm/PurchaseEpisodeModal/Ui202509/TopBox/index.tsx": "cb2f25ff1974",
+    "화면: components/blocks/BottomSlideMenu/index.tsx": "f3aede0e6d30",
+    "화면: components/blocks/popups/DefaultDialog2.tsx": "53ad8c4090f2",
+    "화면: components/blocks/popups/styles.ts": "168cc21346a8",
+    "화면: components/blocks/popups/DefaultConfirmDialog2/index.tsx": "8afb275f0af0",
+    "화면: hocs/GlobalModalAnimationContainer/index.tsx": "3777107ce2fd",
+    "화면: hocs/GlobalModalAnimationContainer/styles.ts": "01deb8f09e3c",
+    "화면: components/blocks/ControlOverlay/WebtoonTopControlBox.tsx": "c88ca530ad84",
+    "화면: components/blocks/ControlOverlay/WebtoonBottomControlBox/index.tsx": "652d80713b6c",
+    "화면: components/blocks/ControlOverlay/styles.ts": "d1582c9d2ad5",
+    "화면: components/blocks/202308/ViewerController/TopLine/index.tsx": "5004b2700cb1",
+    "화면: components/blocks/202308/ViewerController/BottomLine/index.tsx": "535a1f59307f",
+    "화면: components/blocks/202308/ViewerController/BottomLine/styles.ts": "5e04843c2fc9",
+    "화면: components/atoms/Toast.tsx": "d4d6ecf8aa7a",
+    "화면: components/atoms/styles.ts": "6ad8ef867e59",
+    "화면: hocs/withToast.tsx": "41c127c8c514"
+  },
+  "needsReview": []
+}

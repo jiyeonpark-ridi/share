@@ -1,0 +1,1357 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>다음 화 상태별 시뮬레이터</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Poppins:wght@400;500;600&display=swap">
+<style>
+/* 페이지(바깥) 토큰. 폰 안의 앱 화면 색 · 글자 크기는 spec.json(앱 코드에서 추출)에서 온다. */
+:root {
+  --bg: #F3F4F7;
+  --panel: #FFFFFF;
+  --ink: #14171C;
+  --ink-2: #545763;
+  --ink-3: #737885;
+  --line: #DEE3EB;
+  --accent: #4D4AFF;
+  --accent-ink: #FFFFFF;
+  --chip-bg: #EDF0F7;
+  --go: #1F8A5B; --go-bg: #E3F4EC;
+  --warn: #A15C00; --warn-bg: #FFF1DB;
+  --off: #737885; --off-bg: #EDF0F7;
+  --font-ui: "Noto Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif;
+  --font-app: "Poppins", "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D0F12; --panel: #14171C; --ink: #EDF0F7; --ink-2: #999CA8; --ink-3: #737885; --line: #2B2E36;
+    --accent: #8A88FF; --accent-ink: #0D0F12; --chip-bg: #1F2129;
+    --go: #5CD69E; --go-bg: #12301F; --warn: #F2B35B; --warn-bg: #33240D; --off: #999CA8; --off-bg: #1F2129;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D0F12; --panel: #14171C; --ink: #EDF0F7; --ink-2: #999CA8; --ink-3: #737885; --line: #2B2E36;
+  --accent: #8A88FF; --accent-ink: #0D0F12; --chip-bg: #1F2129;
+  --go: #5CD69E; --go-bg: #12301F; --warn: #F2B35B; --warn-bg: #33240D; --off: #999CA8; --off-bg: #1F2129;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 14px/1.5 var(--font-ui);
+  padding: 16px 16px 40px;
+}
+.wrap { margin: 0 auto; display: grid; gap: 12px; }
+
+.panel.topbar { display: flex; align-items: center; gap: 12px 20px; flex-wrap: wrap; padding: 10px 16px; }
+h1 { font-size: 17px; line-height: 1.3; margin: 0; white-space: nowrap; }
+.title p { margin: 2px 0 0; font-size: 12px; color: var(--ink-2); }
+.seg.seg--size label { padding: 8px 12px; font-size: 12px; }
+.status {
+  margin-left: auto;
+  font-size: 13px; font-weight: 500;
+  border-radius: 999px; padding: 6px 12px;
+  background: var(--chip-bg); color: var(--ink-2);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.status.go { background: var(--go-bg); color: var(--go); }
+.seg.seg--row { display: flex; gap: 6px; }
+.seg.seg--row label { grid-auto-flow: column; align-items: baseline; gap: 6px; padding: 8px 14px; }
+.banner { border-radius: 10px; padding: 10px 14px; font-size: 13px; background: var(--warn-bg); color: var(--warn); }
+.banner[hidden] { display: none; }
+
+.layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+.panel h2 { font-size: 13px; margin: 0 0 8px; color: var(--ink-2); font-weight: 500; }
+.controls { align-self: start; align-content: start; overflow: auto; }
+.info { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow: auto; }
+
+/* 뷰어 선택 */
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.seg label {
+  position: relative;
+  display: grid; gap: 2px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-size: 13px; font-weight: 500;
+}
+.seg label small { font-weight: 400; color: var(--ink-3); font-size: 11px; }
+.seg input, .states input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label:has(input:checked) { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.seg label:has(input:focus-visible), .states label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* 상태 선택: PRD 표의 행 단위로 묶음 */
+.states { display: grid; gap: 4px; }
+.row-group { display: grid; gap: 4px; }
+.states label {
+  position: relative;
+  display: flex; align-items: center; gap: 8px;
+  border-radius: 8px;
+  padding: 7px 10px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.states label::before {
+  content: ""; flex: none; width: 14px; height: 14px; border-radius: 50%;
+  border: 1.5px solid var(--ink-3);
+}
+.states label:hover { background: var(--chip-bg); }
+.states label:has(input:checked) { background: var(--chip-bg); font-weight: 500; }
+.states label:has(input:checked)::before { border: 4.5px solid var(--accent); }
+.states label:has(input:disabled) { cursor: not-allowed; color: var(--ink-3); }
+.states label:has(input:disabled)::before { border-style: dashed; }
+.states label .soon { margin-left: auto; font-size: 11px; color: var(--ink-3); white-space: nowrap; }
+
+.toggle { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; }
+.toggle[hidden] { display: none; }
+.switch { appearance: none; width: 40px; height: 24px; border-radius: 12px; background: var(--line); position: relative; cursor: pointer; flex: none; margin: 0; transition: background .15s; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .15s; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+.switch:checked { background: var(--accent); }
+.switch:checked::after { transform: translateX(16px); }
+.switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.hint { margin: 6px 0 0; font-size: 11px; color: var(--ink-3); }
+.btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.btn {
+  font: 500 13px/1 var(--font-ui);
+  color: var(--ink); background: var(--panel);
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: 9px 14px; cursor: pointer;
+}
+.btn:hover { border-color: var(--ink-3); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* 기기 무대 */
+.stage {
+  min-width: 0;
+  min-height: 480px;
+  display: flex; gap: 20px;
+  justify-content: safe center; align-items: flex-start;
+  padding: 4px 4px 12px;
+}
+.device { margin: 0; display: grid; gap: 10px; justify-items: center; flex: none; scroll-snap-align: center; }
+.device__box { position: relative; }
+.device__frame {
+  position: absolute; left: 0; top: 0;
+  transform-origin: 0 0;
+  border-radius: 40px;
+  padding: 6px;
+  background: #0A0B0D;
+  box-shadow: 0 0 0 1px var(--line), 0 12px 32px rgba(0,0,0,.18);
+}
+.device--tablet .device__frame { border-radius: 28px; padding: 8px; }
+.device--android .device__frame { border-radius: 34px; }
+
+/* 정보 패널 */
+.case { display: grid; gap: 12px; }
+.case h3 { margin: 0; font-size: 16px; }
+.kv { display: grid; gap: 4px; }
+.kv dt { font-size: 12px; color: var(--ink-3); }
+.kv dd { margin: 0; font-size: 13px; }
+.badge { display: inline-block; font-size: 11px; font-weight: 500; border-radius: 999px; padding: 2px 8px; }
+.badge.ok { background: var(--go-bg); color: var(--go); }
+.badge.diff { background: var(--warn-bg); color: var(--warn); }
+.badge.off { background: var(--off-bg); color: var(--off); }
+.note { font-size: 12px; color: var(--ink-2); margin: 0; }
+
+/* ── 폰 안의 앱 화면: 앱과 같은 폰트(assets/*.ttf), 색 · 크기는 앱 코드 값 ── */
+@font-face { font-family: "MantaPoppins"; src: url(assets/Poppins-Regular.ttf) format("truetype"); font-weight: 400; }
+@font-face { font-family: "MantaPoppins"; src: url(assets/Poppins-Medium.ttf) format("truetype"); font-weight: 500; }
+@font-face { font-family: "MantaPoppins"; src: url(assets/Poppins-SemiBold.ttf) format("truetype"); font-weight: 600; }
+@font-face { font-family: "MantaDroidSerif"; src: url(assets/DroidSerif-Regular.ttf) format("truetype"); font-weight: 400; }
+.screen {
+  --font-app: "MantaPoppins", "Poppins", sans-serif;
+  position: relative; overflow: hidden;
+  background: #000;
+  font-family: var(--font-app);
+  user-select: none; -webkit-user-select: none;
+  border-radius: 34px;
+  -webkit-font-smoothing: antialiased;
+}
+.device--tablet .screen { border-radius: 18px; }
+.screen .img { display: block; flex: none; }
+.viewport { position: absolute; inset: 0; overflow: hidden; touch-action: none; cursor: grab; }
+.viewport:active { cursor: grabbing; }
+.content { position: absolute; left: 0; right: 0; top: 0; will-change: transform; }
+.statusbar {
+  position: absolute; left: 0; right: 0; top: 0; z-index: 120;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32px; color: #fff; font: 600 15px/1 -apple-system, "SF Pro Text", system-ui, sans-serif;
+  pointer-events: none; transition: opacity .15s;
+}
+.sb-icons { display: flex; gap: 3px; align-items: flex-end; }
+.sb-icons i { width: 3px; background: #fff; border-radius: 1px; }
+.sb-icons i:nth-child(1) { height: 5px; } .sb-icons i:nth-child(2) { height: 7px; } .sb-icons i:nth-child(3) { height: 9px; }
+.sb-icons b { width: 22px; height: 10px; border: 1.5px solid #fff; border-radius: 3px; margin-left: 4px; box-shadow: inset 0 0 0 1.5px #000; background: #fff; }
+.home-ind { position: absolute; left: 50%; bottom: 8px; width: 134px; height: 5px; margin-left: -67px; border-radius: 3px; background: #fff; z-index: 130; pointer-events: none; }
+
+.cut { position: relative; }
+.cut span { position: absolute; left: 16px; top: 14px; font-size: 12px; color: rgba(255,255,255,.4); }
+.novel-text { padding: 0 20px; color: #EDF0F7; font: 400 16px/1.7 "MantaDroidSerif", Georgia, serif; }
+.novel-text p { margin: 0 0 1em; text-indent: 1em; }
+.novel-h { font: 400 22px/1.4 "MantaDroidSerif", Georgia, serif; margin: 0 0 1.2em; text-align: center; }
+.thumb { width: 74px; height: 104px; border-radius: 4px; flex: none; background: linear-gradient(160deg, #3B36C7, #1F1F45 70%); }
+.ep-thumb { background: linear-gradient(160deg, #1A6E70, #262482 80%); }
+.cta {
+  position: relative; flex: 1; height: 44px; border-radius: 8px; border: 1px solid;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+
+.pull-area { width: 100%; }
+.guide { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 0 24px; text-align: center; }
+.ring { position: relative; display: flex; align-items: center; justify-content: center; }
+.ring svg.track { position: absolute; left: 0; top: 0; transform: rotate(-90deg); }
+.ring .chev-on { position: absolute; }
+
+.paged-strip { position: absolute; top: 0; bottom: 0; display: flex; will-change: transform; }
+.page { position: relative; height: 100%; flex: none; overflow: hidden; }
+.manga-grid { display: grid; gap: 6px; padding: 6px; background: #F3F1EC; }
+.manga-grid div { border: 2px solid #14171C; background: repeating-linear-gradient(135deg, #DCD8CF 0 10px, #E8E4DB 10px 20px); }
+.footer-layer { position: absolute; inset: 0; will-change: transform; overflow: hidden; }
+.reveal { position: absolute; top: 0; bottom: 0; width: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.reveal__content { flex: none; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 0 8px; text-align: center; }
+.reveal__hint { display: flex; align-items: center; gap: 2px; }
+
+/* 컨트롤: 150ms Easing.inOut(ease) */
+.ctl { position: absolute; left: 0; right: 0; z-index: 100; background: #000; transition: transform .15s cubic-bezier(.42, 0, .58, 1); }
+.ctl--top { top: 0; }
+.ctl--bottom { bottom: 0; }
+.corner { position: absolute; left: 0; right: 0; height: 20px; display: flex; justify-content: space-between; pointer-events: none; }
+.corner--shade-down { background: linear-gradient(180deg, rgba(0,0,0,.15), rgba(18,18,18,0)); border-radius: 20px 20px 0 0; }
+.corner--shade-up { background: linear-gradient(0deg, rgba(0,0,0,.15), rgba(18,18,18,0)); border-radius: 0 0 20px 20px; }
+.cbtn { width: 36px; height: 36px; border-radius: 18px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.cbtn--pill { width: auto; padding: 0 12px; gap: 2px; }
+
+/* 토스트: 올라올 때 550ms, 내려갈 때 600ms */
+.toast {
+  position: absolute; left: 0; right: 0; z-index: 140;
+  display: flex; justify-content: center; pointer-events: none;
+  transform: translateY(200px);
+}
+.toast > span {
+  background: rgba(0,0,0,.9); border: 1px solid #28292C; border-radius: 25px;
+  padding: 10px 24px; min-height: 40px; max-width: 320px; box-sizing: border-box;
+  font: 600 13px/20px var(--font-app); color: #fff; text-align: center;
+}
+.toast b { color: #6166FF; font-weight: 600; }
+.toast.on { transform: translateY(0); transition: transform .55s cubic-bezier(.25, 1, .5, 1); }
+.toast.off { transform: translateY(200px); transition: transform .6s cubic-bezier(.64, 0, .78, 0); }
+
+.layer { position: absolute; inset: 0; z-index: 110; display: none; }
+.layer.on { display: block; }
+.dim { position: absolute; inset: 0; opacity: 0; }
+.dim--modal { transition: opacity .25s cubic-bezier(0, 0, 0, 1); }
+.dim--sheet { transition: opacity .4s cubic-bezier(.22, 1, .36, 1); }
+.layer.show .dim--modal { opacity: 1; }
+.layer.show .dim--sheet { opacity: .85; }
+.dialog-wrap { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.dialog, .dialog__close, .tablet-popup {
+  opacity: 0; transform: translateY(20px);
+  transition: opacity .25s cubic-bezier(0, 0, 0, 1), transform .25s cubic-bezier(0, 0, 0, 1);
+}
+.layer.show .dialog, .layer.show .dialog__close, .layer.show .tablet-popup { opacity: 1; transform: translateY(0); }
+.dialog { border-radius: 12px; padding: 35px 15px 20px; display: flex; flex-direction: column; }
+.dialog__btn { width: 100%; border: 0; color: #fff; cursor: pointer; }
+.dialog__close { margin-top: 20px; display: flex; align-items: center; gap: 4px; cursor: pointer; background: none; border: 0; padding: 0; }
+.sheet {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  border-radius: 24px 24px 0 0; overflow: hidden;
+  transform: translateY(100%); transition: transform .4s cubic-bezier(.22, 1, .36, 1);
+}
+.layer.show .sheet { transform: translateY(0); }
+.buy-btn { width: 100%; height: 56px; border: 0; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; }
+
+.next-screen {
+  position: absolute; inset: 0; z-index: 105; background: #000;
+  transform: translateX(100%); transition: transform .35s cubic-bezier(.2, .8, .2, 1);
+}
+.next-screen.on { transform: translateX(0); }
+.next-screen__first { position: absolute; inset: 0; overflow: hidden; }
+.next-screen__note {
+  position: absolute; left: 50%; transform: translateX(-50%); z-index: 2;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  background: rgba(13,15,18,.88); border: 1px dashed #545763; border-radius: 14px;
+  padding: 12px 16px; color: #EDF0F7; font: 500 13px/1.3 "Noto Sans KR", sans-serif; white-space: nowrap;
+}
+.again { border: 1px solid #40424D; background: #14171C; color: #EDF0F7; border-radius: 999px; padding: 9px 16px; cursor: pointer; font: 500 13px/1 "Noto Sans KR", sans-serif; }
+@media (min-width: 761px) {
+  .panel.topbar { position: sticky; top: 0; z-index: 10; box-shadow: 0 0 0 8px var(--bg); }
+  .controls { position: sticky; top: 92px; max-height: calc(100vh - 108px); }
+  .stage { padding: 0; }
+}
+@media (max-width: 1200px) {
+  .layout { grid-template-columns: 240px minmax(0, 1fr); }
+}
+@media (max-width: 760px) {
+  body { padding: 16px 16px 32px; }
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .controls { position: static; }
+  .stage { order: -1; justify-content: center; min-height: 0; }
+  .seg.seg--row { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+  .status { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ctl, .toast, .dim, .dialog, .sheet, .next-screen, .dialog__close, .tablet-popup { transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="panel topbar">
+    <div class="title">
+      <h1>다음 화 상태별 시뮬레이터</h1>
+      <p>폰 화면을 손가락이나 마우스로 끌어 보세요.</p>
+    </div>
+    <div class="seg seg--row" id="viewer-seg" role="radiogroup" aria-label="뷰어"></div>
+    <div class="seg seg--row seg--size" id="size-seg" role="radiogroup" aria-label="보기 크기">
+      <label><input type="radio" name="size" value="width">가로 꽉 차게</label>
+      <label><input type="radio" name="size" value="fit">한 화면에 보기</label>
+    </div>
+    <span class="status" id="status" aria-live="polite">평소</span>
+  </header>
+  <div class="banner" id="review-banner" hidden></div>
+
+  <div class="layout">
+    <aside class="panel controls" aria-label="시뮬레이터 설정">
+      <section>
+        <h2>다음 화 상태</h2>
+        <div class="states" id="states"></div>
+      </section>
+      <section>
+        <h2>작품 알림 켜짐</h2>
+        <div class="seg" id="notif-seg">
+          <label><input type="radio" name="notif" value="on">On</label>
+          <label><input type="radio" name="notif" value="off">Off</label>
+        </div>
+        <p class="hint">최신화(연재중)에서 뜨는 다이얼로그가 달라져요.</p>
+      </section>
+      <section>
+        <h2>기기</h2>
+        <div class="seg" id="devices"></div>
+      </section>
+      <section class="btns">
+        <button class="btn" type="button" id="to-end">회차 끝으로</button>
+        <button class="btn" type="button" id="to-start">처음부터</button>
+      </section>
+    </aside>
+
+    <main class="stage" id="stage" aria-label="기기 화면"></main>
+  </div>
+</div>
+
+<script>
+(async () => {
+// ───────────────────── spec (앱 코드에서 추출) ─────────────────────
+let SPEC;
+try {
+  const res = await fetch('spec.json', { cache: 'no-cache' });
+  SPEC = await res.json();
+} catch (e) {
+  const b = document.getElementById('review-banner');
+  b.hidden = false;
+  b.textContent = 'spec.json을 불러오지 못했어요. 로컬에서는 간단한 서버로 열어 주세요 (python3 -m http.server).';
+  return;
+}
+const K = SPEC.constants;
+const COLOR = SPEC.color;
+const S = (key, vars = {}) => (SPEC.strings[key] || key).replace(/\{\{(\w+)\}\}/g, (_, v) => vars[v] ?? '');
+const T = (name) => { const t = SPEC.text[name]; return `font: ${t.weight} ${t.size}px/${t.line}px var(--font-app);`; };
+const PULL = K.pullAreaHeight;
+
+{
+  if (SPEC.needsReview?.length) {
+    const b = document.getElementById('review-banner');
+    b.hidden = false;
+    b.textContent = `앱 코드의 동작 로직이 바뀌었는데 이 화면에는 아직 반영 전이에요: ${SPEC.needsReview.join(', ')}. 숫자 · 문구는 최신이지만 상태별 처리는 이전 기준일 수 있어요.`;
+  }
+}
+
+// ───────────────────── 설정 데이터 ─────────────────────
+const VIEWERS = [
+  { id: 'comic', name: 'Comic', sub: '세로 스크롤', mode: 'scroll', kind: 'comic' },
+  { id: 'novel-scroll', name: 'Novel', sub: '스크롤 보기', mode: 'scroll', kind: 'novel' },
+  { id: 'novel-paged', name: 'Novel', sub: '좌우 넘김', mode: 'paged', kind: 'novel', rtl: false },
+  { id: 'manga', name: 'Manga', sub: '좌우 넘김', mode: 'paged', kind: 'manga', rtl: true },
+];
+
+// getGestureNextAction · useEpisodeAction · RootOriginal 의 분기를 상태별로 옮김
+// action: next(다음 화) | up_to_date | none
+// after: go(바로 이동) | freepass(이용권 사용 이동 + 토스트) | purchase(구매 바텀시트)
+const GROUPS = [
+  {
+    result: '다음 화로 바로 이동',
+    prd: '다음 화로 바로 이동 (무료 회차 · 이미 Unlock한 회차 · 대여권으로 열람 중인 회차 · 구독 중인 구독 대상 작품)',
+    states: [{ id: 'free', label: '무료 · Unlock · 구독 중', action: 'next', after: 'go' }],
+  },
+  {
+    result: '이용권 사용 → 바로 이동 + 토스트',
+    prd: '이용권을 사용하여 다음 화로 바로 이동 + 토스트 팝업 노출 (대여권은 기능 개발 후 적용)',
+    states: [{ id: 'freepass', label: 'Free Pass 사용 가능', action: 'next', after: 'freepass' }],
+  },
+  {
+    result: '회차 구매 바텀시트',
+    prd: '회차 구매 바텀시트 노출 (현행과 동일). 구매 바텀시트 바깥 탭 시, 시트만 닫히고 뷰어에 머묾.',
+    states: [{ id: 'gem', label: '젬 구매 필요', action: 'next', after: 'purchase' }],
+  },
+  {
+    result: '알림 설정 유도',
+    prd: '알림설정 유도 바텀시트 노출',
+    states: [{ id: 'latest', label: '최신화 (연재중)', action: 'up_to_date' }],
+  },
+  {
+    result: '아무 동작 없음',
+    prd: '스크롤 되지 않도록 조치 (스크롤해도 아무 동작 없음)',
+    states: [
+      { id: 'completed', label: '마지막화 (종결)', action: 'none' },
+      { id: 'preview', label: '프리뷰 회차', action: 'none', preview: true },
+    ],
+  },
+];
+const STATES = Object.fromEntries(GROUPS.flatMap((g) => g.states.map((s) => [s.id, { ...s, group: g }])));
+
+const DEVICES = [
+  { id: 'phone', name: 'Phone', model: 'iPhone 16', w: 393, h: 852, top: 54, bottom: 34, os: 'ios' },
+  { id: 'tablet', name: 'Tablet', model: 'iPad mini', w: 744, h: 1133, top: 24, bottom: 20, os: 'ios', tablet: true },
+];
+
+const CUR_ORD = 12;
+const NEXT_ORD = 13;
+
+// ───────────────────── 상태 ─────────────────────
+const urlp = new URLSearchParams(location.search);
+const state = {
+  viewer: VIEWERS.some((v) => v.id === urlp.get('viewer')) ? urlp.get('viewer') : 'comic',
+  next: STATES[urlp.get('state')] ? urlp.get('state') : 'free',
+  notif: urlp.get('notif') === 'on',
+  device: urlp.get('device') === 'tablet' ? 'tablet' : 'phone',
+  size: urlp.get('size') === 'fit' ? 'fit' : 'width',
+};
+const syncUrl = () => {
+  const p = new URLSearchParams({
+    viewer: state.viewer, state: state.next, notif: state.notif ? 'on' : 'off', device: state.device, size: state.size,
+  });
+  history.replaceState(null, '', `?${p}`);
+};
+
+// ───────────────────── 설정 UI ─────────────────────
+const viewerSeg = document.getElementById('viewer-seg');
+viewerSeg.innerHTML = VIEWERS.map((v) => `
+  <label><input type="radio" name="viewer" value="${v.id}" ${v.id === state.viewer ? 'checked' : ''}>${v.name}<small>${v.sub}</small></label>`).join('');
+viewerSeg.addEventListener('change', (e) => { state.viewer = e.target.value; rebuild(); });
+
+const statesEl = document.getElementById('states');
+statesEl.innerHTML = GROUPS.map((g) => `
+  <div class="row-group" role="group" aria-label="${g.result}">
+    ${g.states.map((s) => `<label><input type="radio" name="state" value="${s.id}" ${s.disabled ? 'disabled' : ''} ${s.id === state.next ? 'checked' : ''}>${s.label}${s.soon ? `<span class="soon">${s.soon}</span>` : ''}</label>`).join('')}
+  </div>`).join('');
+statesEl.addEventListener('change', (e) => { state.next = e.target.value; rebuild(); });
+
+const notifSeg = document.getElementById('notif-seg');
+const syncNotif = () => { notifSeg.querySelector(`input[value="${state.notif ? 'on' : 'off'}"]`).checked = true; };
+syncNotif();
+notifSeg.addEventListener('change', (e) => { state.notif = e.target.value === 'on'; syncUrl(); renderCase(); });
+
+const devicesEl = document.getElementById('devices');
+devicesEl.innerHTML = DEVICES.map((d) => `
+  <label><input type="radio" name="device" value="${d.id}" ${d.id === state.device ? 'checked' : ''}>${d.name}<small>${d.model} · ${d.w}×${d.h}</small></label>`).join('');
+devicesEl.addEventListener('change', (e) => { state.device = e.target.value; rebuild(); });
+
+const sizeSeg = document.getElementById('size-seg');
+sizeSeg.querySelector(`input[value="${state.size}"]`).checked = true;
+sizeSeg.addEventListener('change', (e) => { state.size = e.target.value; syncUrl(); layout(); });
+document.getElementById('to-end').addEventListener('click', () => sims.forEach((s) => s.reset('end')));
+document.getElementById('to-start').addEventListener('click', () => sims.forEach((s) => s.reset('start')));
+
+// ───────────────────── 설명 · 기록 ─────────────────────
+// 설명 · 기록 패널은 뺐다. 호출부는 그대로 두고 아무 것도 하지 않는다.
+function renderCase() {}
+function log() {}
+
+// ───────────────────── 공통 그리기 ─────────────────────
+// ── 앱 에셋 (assets/ 는 앱 src/assets 의 원본 파일을 그대로 복사한 것) ──
+const ASSET = (f) => `assets/${f}`;
+// RN Image 처럼 그린다. tint 가 있으면 tintColor 처럼 모양만 그 색으로 칠한다.
+const img = (file, w, h = w, tint, style = '') => (tint
+  ? `<span class="img" style="width:${w}px;height:${h}px;background:${tint};-webkit-mask:url(${ASSET(file)}) center/100% 100% no-repeat;mask:url(${ASSET(file)}) center/100% 100% no-repeat;${style}"></span>`
+  : `<img class="img" src="${ASSET(file)}" width="${w}" height="${h}" alt="" draggable="false" style="${style}">`);
+// styles/font.ts text(size, lineHeight, weight)
+const tx = (size, line, weight) => `font: ${weight} ${size}px/${line}px var(--font-app);`;
+
+function footerCta(st) {
+  if (st.preview) return { title: S('t_unlock_this_episode'), sub: S('t_unlock_with_gems_to_continue'), brand: true, chev: true };
+  if (st.action === 'none') return { title: S('t_you_ve_finished_it'), disabled: true };
+  if (st.action === 'up_to_date') return { title: S('t_up_to_date') };
+  if (st.after === 'purchase') return { title: S('t_unlock_next_episode'), sub: S('t_unlock_with_gems_to_continue'), brand: true, chev: true };
+  if (st.after === 'freepass') return { title: S('t_next_episode'), sub: S('t_free_pass_available'), clock: true, brand: true, chev: true };
+  return { title: S('t_next_episode'), sub: S('t_episode_$ord', { ord: NEXT_ORD }), brand: true, chev: true };
+}
+
+// Footer/EpisodeCommentPreview (enableEpisodeComments 가 켜진 경우)
+const SAMPLE_COMMENTS = [
+  { author: 'moonlit_reader', body: 'That last panel… I was not ready. Need the next one right now!', replies: 12, likes: 248, best: true },
+  { author: 'yuna.k', body: 'The art in this episode is unreal. Every cut looks like a poster.', replies: 3, likes: 97, best: true },
+];
+function commentPreviewHtml() {
+  return `
+    <div style="align-self:center;max-width:600px;width:100%;padding:24px 16px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;gap:4px;align-items:center">
+        <span style="${T('body3M')}color:${COLOR.textPrimary}">${S('t_comments')}</span>
+        <span style="${T('body3M')}color:${COLOR.textPrimary}">128</span>
+        ${img('ic-chevron-right_12x12.png', 12)}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        ${SAMPLE_COMMENTS.map((c, i) => `
+          ${i ? `<div style="height:1px;background:${COLOR.borderMute}"></div>` : ''}
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="${T('body1R')}color:${COLOR.textTertiary};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.author}</div>
+            <div style="display:flex;gap:6px">
+              ${c.best ? `<div style="width:32px;padding-top:3px;flex:none"><span style="display:inline-block;border:1px solid #6166FF;border-radius:999px;padding:0 4px;${T('captionSb')}color:#6166FF">TOP</span></div>` : ''}
+              <div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0">
+                <div style="${tx(14, 18, 400)}color:${COLOR.textPrimary};display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${c.body}</div>
+                <div style="display:flex;gap:12px;align-items:center">
+                  <span style="${T('body1M')}color:${COLOR.textTertiary}">${S('t_reply')} ${c.replies}</span>
+                  <span style="display:flex;gap:4px;align-items:center">${img('ic-heart_16x16.svg', 16, 16, COLOR.textTertiary)}<span style="${T('body1M')}color:${COLOR.textTertiary}">${c.likes}</span></span>
+                </div>
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div style="height:1px;background:${COLOR.borderMute};align-self:center;max-width:600px;width:100%;margin-bottom:16px"></div>`;
+}
+
+// ViewerFooter: [댓글 미리보기] → EpisodeSection 카드 → 저작권 문구 → Manta 워드마크
+function footerHtml(st, d) {
+  const c = footerCta(st);
+  const ctaBg = c.brand ? COLOR.containerBrand : COLOR.surfaceBase;
+  const ctaBorder = c.brand ? COLOR.containerBrand : COLOR.borderMute;
+  const rateTint = '#737885'; // 아무 것도 평가하지 않은 상태
+  return `
+    <div style="display:flex;flex-direction:column">
+      ${commentPreviewHtml()}
+      <div style="align-self:center;padding:0 16px;width:${d.tablet ? '375px' : '100%'}">
+        <div style="background:${COLOR.surfaceBottom};border-radius:8px;padding:16px 11px;display:flex;flex-direction:column;gap:24px">
+          <div style="display:flex;gap:12px">
+            <div class="thumb"></div>
+            <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+              <div style="display:flex;flex-direction:column;gap:4px;padding:0 4px">
+                <div style="${T('body3M')}color:${COLOR.textPrimary}">Series Title</div>
+                <div style="${T('body1R')}color:${COLOR.textTertiary}">${S('t_episode_$ord', { ord: CUR_ORD })}</div>
+              </div>
+              <div style="flex:1;display:flex;align-items:flex-end;gap:8px">
+                <div style="width:116px;height:40px;border-radius:20px;background:${COLOR.containerBase};display:flex;align-items:center;justify-content:space-between;padding:0 12px">
+                  <span style="width:32px;height:32px;display:flex;align-items:center;justify-content:center">${img('ic-thumb-up_24x24.png', 24, 24, rateTint)}</span>
+                  <span style="width:1.5px;height:11px;background:${COLOR.textDisabled}"></span>
+                  <span style="width:32px;height:32px;display:flex;align-items:center;justify-content:center">${img('ic-thumb-down_24x24.png', 24, 24, rateTint)}</span>
+                </div>
+                <div style="width:40px;height:40px;border-radius:20px;background:${COLOR.containerBase};display:flex;align-items:center;justify-content:center">${img('ic-plusmark_24x24.png', 24)}</div>
+                <div style="width:40px;height:40px;border-radius:20px;background:${COLOR.containerBase};display:flex;align-items:center;justify-content:center">${img(state.notif ? 'ic-bell-fill_24x24.png' : 'ic-bell_24x24.png', 24)}</div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:20px">
+            <div style="display:flex;gap:12px">
+              <div style="width:44px;height:44px;border-radius:8px;background:${COLOR.containerHighest};display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none">
+                ${img('ic-menu-lines_20x20.png', 20, 20, COLOR.textPrimary)}
+                <span style="${T('body1Sb')}color:${COLOR.textPrimary}">${S('t_list')}</span>
+              </div>
+              <div class="cta" data-cta role="button" style="background:${ctaBg};border-color:${ctaBorder}">
+                <span style="${T('body2Sb')}color:${c.disabled ? COLOR.textDisabled : COLOR.textPrimary}">${c.title}</span>
+                ${c.sub ? `<span style="display:flex;gap:2px;align-items:center">${c.clock ? img('ic-clock-circle_12x12.png', 12) : ''}<span style="${T('captionR')}color:${COLOR.textPrimary}">${c.sub}</span></span>` : ''}
+                ${c.chev ? `<span style="position:absolute;right:12px;top:50%;margin-top:-10px">${img('ic-chevron-right_20x20.png', 20, 20, COLOR.textPrimary)}</span>` : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="${T('body1R')}color:${COLOR.textDisabled};align-self:center;margin-top:16px;text-align:center">${S('t_this_series_is_protected_under_copyright_law#2')}</div>
+      <img src="${ASSET('manta-wordmark_78x20.png')}" width="78" height="20" alt="Manta" draggable="false" style="align-self:center;margin-top:8px">
+    </div>`;
+}
+
+// PullNextGuide (+ PullProgressRing)
+function guideHtml(st) {
+  const isNext = st.action === 'next';
+  const R = (K.ringSize - K.ringStroke) / 2;
+  const C = 2 * Math.PI * R;
+  const chev = (tint) => img('ic-chevron-up_16x16.png', 16, 16, tint);
+  const ind = K.indicator === 'ring' ? `
+    <div class="ring" style="width:${K.ringSize}px;height:${K.ringSize}px">
+      <svg class="track" width="${K.ringSize}" height="${K.ringSize}">
+        <circle cx="${K.ringSize / 2}" cy="${K.ringSize / 2}" r="${R}" fill="none" stroke="${COLOR.borderMute}" stroke-width="${K.ringStroke}"/>
+        <circle data-arc cx="${K.ringSize / 2}" cy="${K.ringSize / 2}" r="${R}" fill="none" stroke="${COLOR.textDisabled}" stroke-width="${K.ringStroke}" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C}"/>
+        <circle data-on cx="${K.ringSize / 2}" cy="${K.ringSize / 2}" r="${R}" fill="none" stroke="${COLOR.textPrimary}" stroke-width="${K.ringStroke}" opacity="0"/>
+      </svg>
+      ${chev(COLOR.textDisabled)}
+      <span class="chev-on" data-on style="opacity:0">${chev(COLOR.textPrimary)}</span>
+    </div>` : chev(COLOR.textDisabled);
+  return `
+    <div class="guide" style="height:${K.guideHeight}px">
+      ${ind}
+      <div style="${T('body1R')}color:${COLOR.textDisabled}">${isNext ? S('t_keep_scrolling_for_the_next_episode') : S('t_next_episode_coming_soon')}</div>
+      ${isNext ? `<div style="${T('body3Sb')}color:${COLOR.textDisabled};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${S('t_episode_$ord', { ord: NEXT_ORD })}</div>` : ''}
+    </div>`;
+}
+
+// NextEpisodeRevealGuide
+function revealHtml(st, rtl) {
+  const isNext = st.action === 'next';
+  const hint = isNext ? S('t_next_episode') : S('t_next_episode_coming_soon');
+  return `
+    <div class="reveal__content" style="width:${K.swipeDistance}px">
+      <div class="reveal__hint" style="flex-direction:${rtl ? 'row-reverse' : 'row'}">
+        <span style="${T('body2R')}color:${COLOR.textDisabled};flex-shrink:1">${hint}</span>
+        ${isNext ? img('ic-chevron-right_16x16.png', 16, 16, COLOR.textDisabled, rtl ? 'transform:scaleX(-1)' : '') : ''}
+      </div>
+      ${isNext ? `<div style="${T('body3Sb')}color:${COLOR.textDisabled};display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${S('t_episode_$ord', { ord: NEXT_ORD })}</div>` : ''}
+    </div>`;
+}
+
+const interp = (x, inR, outR) => {
+  if (x <= inR[0]) return outR[0];
+  for (let i = 1; i < inR.length; i++) {
+    if (x <= inR[i]) {
+      const t = (x - inR[i - 1]) / (inR[i] - inR[i - 1] || 1);
+      return outR[i - 1] + (outR[i] - outR[i - 1]) * t;
+    }
+  }
+  return outR[outR.length - 1];
+};
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+function tween(from, to, ms, onUpdate, onDone) {
+  let raf; const start = performance.now();
+  const step = (now) => {
+    const t = Math.min(1, (now - start) / ms);
+    onUpdate(from + (to - from) * easeOut(t));
+    if (t < 1) raf = requestAnimationFrame(step); else onDone?.();
+  };
+  raf = requestAnimationFrame(step);
+  return () => cancelAnimationFrame(raf);
+}
+
+// ───────────────────── 시뮬레이터 (기기 1대) ─────────────────────
+class Sim {
+  constructor(device) {
+    this.d = device;
+    this.v = VIEWERS.find((x) => x.id === state.viewer);
+    this.st = STATES[state.next];
+    this.hasGoNext = this.st.action !== 'none';
+    this.cancels = [];
+    this.build();
+  }
+
+  get name() { return this.d.name; }
+
+  build() {
+    const d = this.d;
+    const fig = document.createElement('figure');
+    fig.className = `device${d.tablet ? ' device--tablet' : ''}`;
+    fig.innerHTML = `
+      <div class="device__box"><div class="device__frame">
+        <div class="screen" style="width:${d.w}px;height:${d.h}px">
+          <div class="viewport"></div>
+          <div class="statusbar" style="height:${d.top}px"><span>9:41</span><span class="sb-icons"><i></i><i></i><i></i><b></b></span></div>
+          <div class="ctl ctl--top"></div>
+          <div class="ctl ctl--bottom"></div>
+          <div class="toast"></div>
+          <div class="layer"></div>
+          <div class="next-screen"></div>
+          ${d.bottom ? '<div class="home-ind"></div>' : ''}
+        </div>
+      </div></div>`;
+    this.fig = fig;
+    const q = (sel) => fig.querySelector(sel);
+    this.box = q('.device__box'); this.frame = q('.device__frame'); this.screen = q('.screen');
+    this.viewport = q('.viewport'); this.ctlTop = q('.ctl--top'); this.ctlBottom = q('.ctl--bottom');
+    this.statusBar = q('.statusbar');
+    this.toastEl = q('.toast'); this.layer = q('.layer'); this.nextEl = q('.next-screen'); this.statusEl = document.getElementById('status');
+    this.buildControls();
+    if (this.v.mode === 'scroll') this.buildScroll(); else this.buildPaged();
+  }
+
+  // 뷰어 상 · 하단 컨트롤 (회차 끝에서 자동으로 뜸)
+  // Comic: ControlOverlay(WebtoonTopControlBox / WebtoonBottomControlBox), Novel · Manga: 202308/ViewerController
+  buildControls() {
+    const d = this.d;
+    const isComic = this.v.kind === 'comic';
+    const hasNext = this.st.action === 'next';
+    this.controlH = isComic ? K.webtoonControlHeight : K.ebookControlHeight;
+    this.bottomInset = d.bottom + this.controlH;
+    const circle = (file, enabled = true) => `<span class="cbtn" style="background:${enabled ? COLOR.containerBase : COLOR.surfaceBase}">${img(file, 20, 20, enabled ? COLOR.textPrimary : COLOR.textDisabled)}</span>`;
+    const commentsPill = `<span class="cbtn cbtn--pill" style="background:${COLOR.containerBase}">${img('ic-document-balloon_20x20.png', 20, 20, COLOR.textPrimary)}<span style="${T('body2R')}color:${COLOR.textPrimary}">128</span></span>`;
+    const prevNext = `${circle('ic-chevron-left_20x20.png')}${circle('ic-chevron-right_20x20.png', hasNext)}`;
+    const epTitle = S('t_episode_$ord', { ord: CUR_ORD });
+    this.ctlTop.style.height = `${d.top + 56}px`;
+    this.ctlBottom.style.height = `${this.bottomInset}px`;
+    if (isComic) {
+      this.slide = { top: 90 + 20 + d.bottom, bottom: 90 + 20 + d.bottom };
+      this.ctlTop.innerHTML = `
+        <div style="position:absolute;left:0;right:0;bottom:0;height:56px">
+          <span style="position:absolute;left:8px;top:10px">${img('back_white_36x36.svg', 36)}</span>
+          <div style="height:40px;margin:8px;padding:0 68px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <div style="${tx(14, 21, 600)}color:#FFFFFF;text-align:center">${epTitle}</div>
+            <div style="${tx(11, 17, 400)}color:#737885;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">Series Title</div>
+          </div>
+          <span style="position:absolute;right:8px;top:10px">${img('highlights-list_36x36-2.png', 36)}</span>
+        </div>
+        <div class="corner" style="top:100%">${img('control-top-left-edge_20x20.png', 20)}${img('control-top-left-edge_20x20.png', 20, 20, null, 'transform:rotate(90deg)')}</div>`;
+      this.ctlBottom.innerHTML = `
+        <div class="corner" style="bottom:100%">${img('control-top-left-edge_20x20.png', 20, 20, null, 'transform:rotate(-90deg)')}${img('control-top-left-edge_20x20.png', 20, 20, null, 'transform:rotate(180deg)')}</div>
+        <div style="height:52px;display:flex;justify-content:space-between;align-items:center;padding:12px 16px 4px">
+          <div style="flex:1;display:flex;gap:12px">${commentsPill}<span class="cbtn" style="background:${COLOR.containerBase}">${img('ic-capture_20x20.png', 20)}</span></div>
+          <div style="display:flex;gap:12px">${prevNext}</div>
+        </div>`;
+    } else {
+      const bbp = d.tablet ? 20 : d.bottom + 16;
+      this.slide = { top: 156 + bbp, bottom: 156 + bbp };
+      const rtl = !!this.v.rtl;
+      this.ctlTop.style.cssText += 'display:flex;align-items:flex-end;justify-content:space-between;padding-left:8px';
+      this.ctlTop.innerHTML = `
+        ${img('arrow-left-white_36x36.png', 36, 36, null, 'margin-bottom:10px;flex:none')}
+        <div style="flex:1;padding-bottom:8px;display:flex;flex-direction:column;align-items:center;min-width:0">
+          <div style="${T('body2Sb')}color:${COLOR.textPrimary};text-align:center">${epTitle}</div>
+          <div style="height:2px"></div>
+          <div style="${T('body1R')}color:${COLOR.textTertiary};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">Series Title</div>
+        </div>
+        <div style="width:36px;flex:none"></div>
+        <div class="corner corner--shade-down" style="top:100%">${img('bottom-left-1_20x20.png', 20, 20, null, 'transform:rotate(90deg)')}${img('bottom-left-1_20x20.png', 20, 20, null, 'transform:rotate(180deg)')}</div>`;
+      this.ctlBottom.innerHTML = `
+        <div class="corner corner--shade-up" style="bottom:100%">${img('bottom-left-1_20x20.png', 20)}${img('bottom-left-1_20x20.png', 20, 20, null, 'transform:rotate(270deg)')}</div>
+        <div style="height:9px"></div>
+        <div style="padding:0 16px 0 20px">
+          <div style="height:30px;display:flex;align-items:center">
+            <div style="flex:1;height:3px;border-radius:3px;background:${COLOR.containerBase};position:relative">
+              <div style="position:absolute;top:0;bottom:0;${rtl ? 'right' : 'left'}:0;width:100%;border-radius:3px;background:#FFFFFF">
+                <span style="position:absolute;${rtl ? 'left' : 'right'}:-7px;top:-5.5px;width:14px;height:14px;border-radius:7px;background:#FFFFFF"></span>
+              </div>
+            </div>
+            <div style="width:15px"></div>
+            <div style="${tx(10, 15, 400)}color:#FFFFFF">240 / 240</div>
+          </div>
+        </div>
+        <div style="height:7px"></div>
+        <div style="height:36px;padding:0 16px;display:flex;justify-content:space-between">
+          <div style="display:flex;gap:12px">${commentsPill}${this.v.kind === 'novel' ? circle('ic-document-setting_20x20-2.png') : ''}${circle('ic-document-setting_20x20.png')}</div>
+          <div style="display:flex;gap:12px">${prevNext}</div>
+        </div>`;
+    }
+    this.setOverlay(false, true);
+  }
+
+  setOverlay(on, silent) {
+    this.overlay = on;
+    this.ctlTop.style.transform = on ? 'translateY(0)' : `translateY(${-this.slide.top}px)`;
+    this.ctlBottom.style.transform = on ? 'translateY(0)' : `translateY(${this.slide.bottom}px)`;
+    // 뷰어에서 상태 표시줄은 컨트롤이 열렸을 때만 보인다
+    this.statusBar.style.opacity = on ? 1 : 0;
+    if (!silent) this.updateStatus();
+  }
+
+  // ── 세로 스크롤 (Comic 세로 · Novel 스크롤): ImageVerticalViewer / ViewerFooterContainer ──
+  buildScroll() {
+    const d = this.d; const st = this.st;
+    const isComic = this.v.kind === 'comic';
+    // 앱과 같이 공용 footer 아래에, 할 일이 있을 때만 당김 영역을 붙인다
+    this.hasPull = this.hasGoNext;
+    const pull = this.hasPull ? `
+      <div class="pull-area" style="background:${COLOR.surfaceBottom};height:${K.guideHeight + this.bottomInset + PULL}px">${guideHtml(st)}</div>` : '';
+    // Comic: ListContainer(pt 24, pb 하단 안전 영역 + 52) / Novel: ViewerFooterContainer Container(pt 상태 표시줄 + 76, pb 하단 안전 영역 + 86)
+    const footerWrap = isComic
+      ? `<div style="background:#000;padding:24px 0 ${d.bottom + K.webtoonControlHeight}px">${footerHtml(st, d)}</div>`
+      : `<div style="background:#000;padding:${d.top + 76}px 0 ${d.bottom + K.ebookControlHeight}px">${footerHtml(st, d)}</div>`;
+    const body = isComic
+      ? `<div style="background:#14171C">${this.cutsHtml(CUR_ORD, 6)}</div>`
+      : `<div style="background:${COLOR.surfaceBase};padding:${d.top + 60}px 0 60px">${this.novelHtml(16)}</div>`;
+    this.viewport.innerHTML = `<div class="content">${body}${footerWrap}${pull}</div>`;
+    this.content = this.viewport.querySelector('.content');
+    this.guideEl = this.viewport.querySelector('.guide');
+    this.arc = this.viewport.querySelector('[data-arc]');
+    this.onEls = this.viewport.querySelectorAll('[data-on]');
+    this.ringC = 2 * Math.PI * ((K.ringSize - K.ringStroke) / 2);
+    this.offset = 0;
+    this.bindScroll();
+  }
+
+  // 컷 이미지 자리 (최대 폭 600, 가운데 정렬)
+  cutsHtml(ord, count) {
+    const hues = ord === CUR_ORD
+      ? [[59, 54, 199], [38, 36, 130], [97, 102, 255], [26, 110, 112], [77, 74, 255], [31, 31, 69]]
+      : [[26, 110, 112], [0, 163, 145], [38, 36, 130], [77, 74, 255], [59, 54, 199], [31, 31, 69]];
+    const w = Math.min(this.d.w, 600);
+    return hues.slice(0, count).map(([r, g, b], i) => `<div class="cut" style="width:${w}px;height:${Math.round(w * 1.3)}px;margin:0 auto;background:linear-gradient(180deg, rgb(${r},${g},${b}) 0%, rgba(${r},${g},${b},.35) 60%, #0b0b10 100%)"><span>${ord}화 컷 ${i + 1}</span></div>`).join('');
+  }
+
+  // 본문: 기본 설정(Black 테마 · Serif · 글자 크기 3 · 줄 간격 3) = DroidSerif 16px, 줄 간격 1.7, 좌우 여백 20
+  novelHtml(count, opening) {
+    const para = 'The rain had not stopped since morning. She pressed her palm against the cold window and counted the lights across the river, one by one, until the numbers no longer meant anything.';
+    const first = 'Morning came quietly. The station was empty except for a single man holding a folded letter, waiting for a train that was already late.';
+    return `<div class="novel-text">${Array.from({ length: count }, (_, i) => `<p>${opening && i === 0 ? first : (i % 3 === 2 ? `${para.split('.')[0]}.` : para)}</p>`).join('')}</div>`;
+  }
+
+  // 만화 한 쪽 (Black 테마 배경 위에 페이지를 화면에 맞춰 놓음)
+  mangaPageHtml(i) {
+    const d = this.d;
+    const pw = Math.min(d.w, (d.h - d.top - d.bottom) * 0.7);
+    return `<div style="position:absolute;inset:0;background:${COLOR.surfaceBase};display:flex;align-items:center;justify-content:center">
+      <div class="manga-grid" style="position:relative;width:${pw}px;height:${pw / 0.7}px;grid-template-rows:${i % 2 ? '2fr 1fr 1.4fr' : '1.2fr 1.6fr 1fr'};grid-template-columns:1fr 1fr"><div style="grid-column:1/3"></div><div></div><div></div><div style="grid-column:1/3"></div></div>
+    </div>`;
+  }
+
+  measure() {
+    this.contentH = this.content.offsetHeight;
+    this.max = Math.max(0, this.contentH - this.d.h);
+    this.start = this.hasPull ? Math.max(0, this.max - PULL) : this.max;
+    const pullTotal = this.hasPull ? K.guideHeight + this.bottomInset + PULL : 0;
+    this.footerEndOffset = Math.max(0, this.contentH - pullTotal - this.d.h);
+  }
+
+  renderScroll() {
+    this.content.style.transform = `translateY(${-this.offset}px)`;
+    let p = 0;
+    if (this.hasPull) {
+      p = clamp((this.offset - this.start) / PULL, 0, 1);
+      this.guideEl.style.transform = `translateY(${p * (PULL / K.guideFollowDivisor)}px)`;
+      if (this.arc) {
+        this.arc.setAttribute('stroke-dashoffset', this.ringC * (1 - p));
+        const on = interp(p, K.ringReachedRange, [0, 0, 1]);
+        this.onEls.forEach((el) => { el.style.opacity = on; });
+      }
+    }
+    this.pullProgress = p;
+    // 회차 끝(onEndReached)에 닿으면 하단 컨트롤이 자동으로 뜬다
+    if (!this.autoShown && this.offset >= this.footerEndOffset - 2) {
+      this.autoShown = true;
+      if (!this.overlay) { this.setOverlay(true, true); log(this.name, '회차 끝 도달 → 뷰어 컨트롤 자동 노출'); }
+    } else if (this.autoShown && this.offset < this.footerEndOffset - 400) {
+      this.autoShown = false;
+    }
+    this.updateStatus();
+  }
+
+  updateStatus(text, go) {
+    let t = text; let g = go;
+    if (!t && this.moved) { t = `${S('t_episode_$ord', { ord: NEXT_ORD })}로 이동함`; g = true; }
+    if (!t) {
+      if (this.v.mode === 'scroll') {
+        if (!this.hasPull) t = this.offset >= this.max - 1 ? '회차 끝 · 더 스크롤되지 않음' : '읽는 중';
+        else if (this.offset <= this.start + 0.5) t = this.offset >= this.start - 1 ? '회차 끝 · 안내 보임' : '읽는 중';
+        else {
+          const px = Math.round(this.offset - this.start);
+          const reached = this.offset >= this.max - K.releaseTolerance;
+          t = reached ? `당김 ${px}/${PULL}px · 지금 놓으면 처리` : `당김 ${px}/${PULL}px · 놓으면 원위치`;
+          g = reached;
+        }
+      } else if (!this.footerOn) t = `읽는 중 · ${this.page + 1}/${this.pages}쪽`;
+      else if (!this.ft) t = '회차 끝 화면';
+      else {
+        const toward = this.v.rtl ? this.ft : -this.ft;
+        if (toward > 0) {
+          const reached = toward > K.swipeDistance;
+          t = reached ? `밀기 ${Math.round(toward)}/${K.swipeDistance}px · 지금 놓으면 처리` : `밀기 ${Math.round(toward)}/${K.swipeDistance}px · 놓으면 원위치`;
+          g = reached;
+        } else t = '반대로 밀기 · 회차 끝 화면 닫힘 쪽';
+      }
+    }
+    this.statusEl.textContent = t;
+    this.statusEl.classList.toggle('go', !!g);
+  }
+
+  stopAnims() { this.cancels.forEach((c) => c()); this.cancels = []; }
+
+  scrollTo(to, ms = 300, done) {
+    this.cancels.push(tween(this.offset, to, ms, (v) => { this.offset = v; this.renderScroll(); }, done));
+  }
+
+  // 손을 뗀 위치가 당김 영역 안이면 영역 시작점으로 되돌린다 (resetPullNextArea)
+  resetPull() {
+    if (this.hasPull && this.offset > this.start + 1) this.scrollTo(this.start, 300);
+  }
+
+  bindScroll() {
+    const vp = this.viewport;
+    let drag = null;
+    vp.addEventListener('pointerdown', (e) => {
+      if (this.busy) return;
+      this.stopAnims();
+      vp.setPointerCapture(e.pointerId);
+      drag = { y: e.clientY, x: e.clientX, moved: false, samples: [[performance.now(), this.offset]], cta: e.target.closest('[data-cta]') };
+    });
+    vp.addEventListener('pointermove', (e) => {
+      if (!drag) return;
+      const dy = (e.clientY - drag.y) / this.scale;
+      drag.y = e.clientY;
+      this.offset = clamp(this.offset - dy, 0, this.max);
+      drag.total = (drag.total || 0) + Math.abs(dy);
+      if (drag.total > 6) drag.moved = true;
+      // 회차 중간에서 스크롤하면 컨트롤이 숨는다
+      if (drag.moved && this.overlay && this.offset < this.footerEndOffset - 40) this.setOverlay(false, true);
+      const now = performance.now();
+      drag.samples.push([now, this.offset]);
+      while (drag.samples.length > 2 && now - drag.samples[0][0] > 100) drag.samples.shift();
+      this.renderScroll();
+    });
+    const end = () => {
+      if (!drag) return;
+      const dg = drag; drag = null;
+      if (!dg.moved) {
+        if (dg.cta) this.goNext('cta');
+        else { this.setOverlay(!this.overlay); }
+        return;
+      }
+      // onScrollEndDrag: 당김 영역 끝(허용 오차 이내)에서 놓았을 때만 처리
+      if (this.hasPull && this.offset >= this.max - K.releaseTolerance) {
+        this.goNext('gesture');
+        this.resetPull();
+        return;
+      }
+      if (this.hasPull && this.offset > this.start + 1) {
+        log(this.name, `당김 ${Math.round(this.offset - this.start)}/${PULL}px에서 놓음 → 원위치`);
+        this.resetPull();
+        return;
+      }
+      const [t1, o1] = dg.samples[0]; const [t2, o2] = dg.samples[dg.samples.length - 1];
+      let vel = t2 > t1 ? (o2 - o1) / (t2 - t1) : 0; // px/ms
+      if (Math.abs(vel) < 0.05) return;
+      // 관성 스크롤. 당김 영역으로 들어가도 넘어가지 않고, 멈추면 되돌린다 (onMomentumScrollEnd)
+      let last = performance.now(); let raf;
+      const step = (now) => {
+        const dt = now - last; last = now;
+        this.offset = clamp(this.offset + vel * dt, 0, this.max);
+        vel *= Math.pow(0.996, dt);
+        this.renderScroll();
+        if (Math.abs(vel) > 0.02 && this.offset > 0 && this.offset < this.max) raf = requestAnimationFrame(step);
+        else {
+          if (this.hasPull && this.offset > this.start + 1) log(this.name, '관성으로 당김 영역에 들어감 → 넘어가지 않고 원위치');
+          this.resetPull();
+        }
+      };
+      raf = requestAnimationFrame(step);
+      this.cancels.push(() => cancelAnimationFrame(raf));
+    };
+    vp.addEventListener('pointerup', end);
+    vp.addEventListener('pointercancel', end);
+    let wheelTimer; let wheelLogged = false;
+    vp.addEventListener('wheel', (e) => {
+      if (this.busy) return;
+      // 회차 맨 위 · 맨 아래에서는 휠을 페이지 스크롤로 넘긴다 (기기가 화면보다 클 때 페이지를 내려 볼 수 있게)
+      if ((this.offset <= 0 && e.deltaY < 0) || (this.offset >= this.max && e.deltaY > 0)) return;
+      e.preventDefault();
+      this.stopAnims();
+      this.offset = clamp(this.offset + e.deltaY / this.scale, 0, this.max);
+      if (this.overlay && e.deltaY > 0 && this.offset < this.footerEndOffset - 40) this.setOverlay(false, true);
+      this.renderScroll();
+      clearTimeout(wheelTimer);
+      wheelTimer = setTimeout(() => {
+        if (this.hasPull && this.offset > this.start + 1) {
+          if (!wheelLogged) { log(this.name, '휠 스크롤로 당김 영역에 들어감 → 손을 떼는 동작이 없어 넘어가지 않고 원위치'); wheelLogged = true; }
+          this.resetPull();
+        }
+      }, 160);
+    }, { passive: false });
+  }
+
+  // ── 좌우 넘김 (Novel 좌우 · Manga): ViewerFooterContainer + useViewerFooterAnimation ──
+  buildPaged() {
+    const d = this.d; const st = this.st; const rtl = this.v.rtl;
+    this.pages = 3;
+    const isManga = this.v.kind === 'manga';
+    const pageHtml = (i) => (isManga
+      ? `<div class="page" style="width:${d.w}px">${this.mangaPageHtml(i)}</div>`
+      : `<div class="page" style="width:${d.w}px;background:${COLOR.surfaceBase};padding:${d.top + 60}px 0 60px">${this.novelHtml(8)}</div>`);
+    const order = Array.from({ length: this.pages }, (_, i) => i);
+    if (rtl) order.reverse();
+    // ViewerFooterContainer: Container(pt 상태 표시줄 + 76, pb 하단 안전 영역 + 86), 위에서부터 쌓임
+    this.viewport.innerHTML = `
+      <div class="paged-strip" style="width:${d.w * this.pages}px">${order.map(pageHtml).join('')}</div>
+      ${this.hasGoNext ? `<div class="reveal" style="background:${COLOR.surfaceBottom};${rtl ? 'left:0' : 'right:0'}">${revealHtml(st, rtl)}</div>` : ''}
+      <div class="footer-layer" style="background:${COLOR.surfaceBottom};padding:${d.top + 76}px 0 ${d.bottom + K.ebookControlHeight}px;display:none">${footerHtml(st, d)}</div>`;
+    this.strip = this.viewport.querySelector('.paged-strip');
+    this.revealEl = this.viewport.querySelector('.reveal');
+    this.footerEl = this.viewport.querySelector('.footer-layer');
+    this.page = this.pages - 1;
+    this.footerOn = false;
+    this.ft = 0;
+    this.bindPaged();
+    this.renderPaged(0);
+  }
+
+  renderPaged(dragX) {
+    const w = this.d.w; const rtl = this.v.rtl;
+    // rtl 은 페이지 순서를 뒤집어 두었으므로 index 를 거울로 바꿔 위치를 잡는다
+    const slot = rtl ? (this.pages - 1 - this.page) : this.page;
+    this.strip.style.transform = `translateX(${-slot * w + (this.footerOn ? 0 : dragX)}px)`;
+    this.footerEl.style.display = this.footerOn ? 'block' : 'none';
+    this.footerEl.style.transform = `translateX(${this.ft}px)`;
+    if (this.revealEl) this.revealEl.style.width = `${this.footerOn ? Math.max(0, rtl ? this.ft : -this.ft) : 0}px`;
+    this.updateStatus();
+  }
+
+  showFooter() {
+    const w = this.d.w; const rtl = this.v.rtl;
+    this.footerOn = true;
+    const from = rtl ? -w : w;
+    this.ft = from;
+    this.renderPaged(0);
+    this.setOverlay(true, true);
+    log(this.name, '마지막 쪽 다음 → 회차 끝 화면 등장 · 뷰어 컨트롤 자동 노출');
+    this.cancels.push(tween(from, 0, K.footerInMs, (v) => { this.ft = v; this.renderPaged(0); }));
+  }
+
+  bindPaged() {
+    const vp = this.viewport; const w = this.d.w;
+    let drag = null;
+    vp.addEventListener('pointerdown', (e) => {
+      if (this.busy) return;
+      this.stopAnims();
+      vp.setPointerCapture(e.pointerId);
+      const rect = this.screen.getBoundingClientRect();
+      drag = { x0: e.clientX, x: e.clientX, dx: 0, moved: false, samples: [[performance.now(), 0]], cta: e.target.closest('[data-cta]'), relX: (e.clientX - rect.left) / rect.width, ft0: this.ft };
+    });
+    vp.addEventListener('pointermove', (e) => {
+      if (!drag) return;
+      drag.dx = (e.clientX - drag.x0) / this.scale;
+      if (Math.abs(drag.dx) > 6) drag.moved = true;
+      const now = performance.now();
+      drag.samples.push([now, drag.dx]);
+      while (drag.samples.length > 2 && now - drag.samples[0][0] > 100) drag.samples.shift();
+      if (!drag.moved) return;
+      if (this.footerOn) {
+        const dx = drag.dx; const rtl = this.v.rtl;
+        // useViewerFooterAnimation onUpdate: 읽는 방향은 할 일이 있을 때만 1:1로 따라감
+        if (!rtl) this.ft = dx > 0 || !this.hasGoNext ? Math.max(0, dx) : Math.max(-w, dx);
+        else this.ft = dx < 0 || !this.hasGoNext ? Math.min(0, dx) : Math.min(w, dx);
+        this.renderPaged(0);
+      } else {
+        this.renderPaged(drag.dx);
+      }
+    });
+    const end = () => {
+      if (!drag) return;
+      const dg = drag; drag = null;
+      const rtl = this.v.rtl;
+      const [t1, x1] = dg.samples[0]; const [t2, x2] = dg.samples[dg.samples.length - 1];
+      const vx = t2 > t1 ? ((x2 - x1) / (t2 - t1)) * 1000 : 0; // px/s
+      if (!dg.moved) {
+        if (dg.cta && this.footerOn) { this.goNext('cta'); return; }
+        if (this.footerOn) { this.setOverlay(!this.overlay); return; } // 회차 끝 화면에서는 가장자리 탭으로 넘어가지 않음
+        const fwdTap = rtl ? dg.relX < 0.25 : dg.relX > 0.75;
+        const backTap = rtl ? dg.relX > 0.75 : dg.relX < 0.25;
+        if (fwdTap) this.flip(1); else if (backTap) this.flip(-1); else this.setOverlay(!this.overlay);
+        return;
+      }
+      if (this.footerOn) {
+        const dx = dg.dx;
+        const toward = rtl ? dx : -dx;
+        if (this.hasGoNext && toward > K.swipeDistance) {
+          this.cancels.push(tween(this.ft, 0, 200, (v) => { this.ft = v; this.renderPaged(0); }));
+          this.goNext('gesture');
+          return;
+        }
+        const away = rtl ? -dx : dx;
+        const awayV = rtl ? -vx : vx;
+        if (away > w * K.dismissRatio || awayV > K.dismissVelocity) {
+          const target = rtl ? -w : w;
+          this.cancels.push(tween(this.ft, target, 250, (v) => { this.ft = v; this.renderPaged(0); }, () => {
+            this.footerOn = false; this.ft = 0; this.renderPaged(0);
+            log(this.name, '반대 방향으로 밀어 회차 끝 화면 닫음 → 마지막 쪽');
+          }));
+          return;
+        }
+        if (toward > 0) log(this.name, this.hasGoNext ? `${Math.round(toward)}/${K.swipeDistance}px 밀고 놓음 → 원위치` : '읽는 방향으로 밀리지 않음 (할 일 없음)');
+        this.cancels.push(tween(this.ft, 0, 200, (v) => { this.ft = v; this.renderPaged(0); }));
+        return;
+      }
+      const fwd = rtl ? dg.dx > 0 : dg.dx < 0;
+      if (Math.abs(dg.dx) > w * 0.2 || Math.abs(vx) > 500) this.flip(fwd ? 1 : -1, dg.dx);
+      else this.cancels.push(tween(dg.dx, 0, 200, (v) => this.renderPaged(v)));
+    };
+    vp.addEventListener('pointerup', end);
+    vp.addEventListener('pointercancel', end);
+  }
+
+  flip(dir, fromDx = 0) {
+    if (dir > 0 && this.page >= this.pages - 1) { this.renderPaged(0); this.showFooter(); return; }
+    if (dir < 0 && this.page <= 0) { this.cancels.push(tween(fromDx, 0, 200, (v) => this.renderPaged(v))); return; }
+    const w = this.d.w; const rtl = this.v.rtl;
+    const sign = (dir > 0) !== rtl ? -1 : 1;
+    this.cancels.push(tween(fromDx, sign * w, 220, (v) => this.renderPaged(v), () => {
+      this.page += dir; this.renderPaged(0);
+    }));
+  }
+
+  // ── ② 다음 화 전환 처리 (EpisodeSection.goNextByGesture / Footer 버튼) ──
+  goNext(source) {
+    const st = this.st;
+    const cta = footerCta(st);
+    const text = source === 'gesture' ? 'gesture' : cta.title;
+    if (source === 'cta' && cta.disabled) { log(this.name, 'Footer 버튼 비활성 → 아무 동작 없음'); return; }
+    if (source === 'cta' && st.preview) {
+      log(this.name, 'Footer [Unlock this episode] → 이 회차 구매', "eventButton { type: 'preview_buy_now' }");
+      this.openPurchase(true);
+      return;
+    }
+    if (st.action === 'none') return;
+    const how = source === 'gesture' ? (this.v.mode === 'scroll' ? '당김 끝에서 놓음' : `${K.swipeDistance}px 넘게 밀고 놓음`) : `Footer [${cta.title}] 탭`;
+    if (st.action === 'up_to_date') {
+      log(this.name, `${how} → 알림 다이얼로그`, `eventButton { text: '${text}', type: 'go_notification_popup' }`, true);
+      this.openDialog();
+      return;
+    }
+    const type = st.after === 'purchase' ? 'go_buy_episode' : 'go_viewer';
+    log(this.name, `${how} → ${st.after === 'purchase' ? '구매 바텀시트' : '다음 화로 이동'}`, `eventButton { text: '${text}', type: '${type}' }`, true);
+    if (st.after === 'purchase') this.openPurchase(false);
+    else this.navigateNext(st.after === 'freepass');
+  }
+
+  navigateNext(freePass) {
+    this.busy = true;
+    this.moved = true;
+    this.setOverlay(false, true); // 다음 화는 컨트롤이 닫힌 채로 열린다
+    this.updateStatus();
+    const d = this.d;
+    // 다음 화 뷰어의 첫 화면 (navigation.replace). 같은 뷰어가 컨트롤이 닫힌 채로 처음부터 열린다.
+    const kind = this.v.kind; const paged = this.v.mode === 'paged';
+    let first;
+    if (kind === 'comic') {
+      first = `<div style="position:absolute;inset:0;background:#14171C">${this.cutsHtml(NEXT_ORD, 2)}</div>`;
+    } else if (kind === 'manga') {
+      first = this.mangaPageHtml(0);
+    } else {
+      first = `<div style="position:absolute;inset:0;background:${COLOR.surfaceBase};padding:${d.top + 60}px 0 0">
+        <div class="novel-text"><h2 class="novel-h">Chapter ${NEXT_ORD}</h2></div>${this.novelHtml(paged ? 5 : 10, true)}</div>`;
+    }
+    this.nextEl.innerHTML = `
+      <div class="next-screen__first">${first}</div>
+      <div class="next-screen__note" style="bottom:${K.freePassToastBottom + 64}px">
+        <span>${S('t_episode_$ord', { ord: NEXT_ORD })}로 이동했어요</span>
+        <button class="again" type="button">${CUR_ORD}화 끝으로 돌아가 다시 해보기</button>
+      </div>`;
+    requestAnimationFrame(() => this.nextEl.classList.add('on'));
+    this.nextEl.querySelector('.again').addEventListener('click', () => this.reset('end'));
+    if (freePass) {
+      setTimeout(() => {
+        // useEpisodeLock: Free Pass 자동 사용 + 토스트 (fixedBottom, 안전 영역을 더하지 않음)
+        const raw = S('t_a_free_pass_has_been_used');
+        this.toast(raw.replace('<0>', '<b>').replace('</0>', '</b>'), K.freePassToastBottom);
+        log(this.name, 'Free Pass 자동 사용 → 토스트', "toast_type: 'fp_use'");
+      }, 350);
+    }
+  }
+
+  // hocs/withToast + atoms/Toast: 아래에서 올라와 2.5초 뒤 내려간다
+  toast(html, bottom) {
+    const el = this.toastEl;
+    el.innerHTML = `<span>${html}</span>`;
+    el.style.bottom = `${bottom}px`;
+    el.classList.remove('off');
+    el.classList.add('on');
+    clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => { el.classList.remove('on'); el.classList.add('off'); }, 2500);
+  }
+
+  openLayer(html, onOutside, closeMs = 250) {
+    this.busy = true;
+    this.layerCloseMs = closeMs;
+    this.layer.innerHTML = html;
+    this.layer.classList.add('on');
+    requestAnimationFrame(() => requestAnimationFrame(() => this.layer.classList.add('show')));
+    this.layer.onclick = (e) => { if (e.target.classList.contains('dim') || e.target.classList.contains('dialog-wrap')) onOutside(); };
+  }
+
+  closeLayer(after) {
+    this.layer.classList.remove('show');
+    setTimeout(() => { this.layer.classList.remove('on'); this.layer.innerHTML = ''; this.busy = false; after?.(); }, this.layerCloseMs || 250);
+  }
+
+  // GlobalModalAnimationContainer + DefaultDialog2 / DefaultConfirmDialog2 (Footer [Up to date!] 와 같은 다이얼로그)
+  openDialog() {
+    const notifOn = state.notif;
+    const width = this.d.tablet ? '327px' : '85%';
+    const title = (mb) => `<div style="${T('title1Sb')}color:#FFFFFF;text-align:center;max-width:275px;align-self:center;margin-bottom:${mb}px${mb ? '' : ';padding:0 11px'}">${S('t_up_to_date')}</div>`;
+    const body = notifOn
+      ? `${title(12)}
+         <div style="${tx(14, 19, 400)}color:#737885;text-align:center;max-width:320px;align-self:center;margin-bottom:30px">${S('t_you_re_all_set_we_ll_notify_you_when_the_next_episode_is_available')}</div>
+         <button class="dialog__btn" data-act="close" style="border-radius:8px;height:48px;background:${COLOR.containerBrand};${tx(14, 21, 600)}">${S('t_okay')}</button>`
+      : `${title(0)}
+         <div style="${T('body2R')}color:${COLOR.textSecondary};text-align:center;align-self:center;margin:12px 0 32px;white-space:pre-line">${S('t_next_episode_coming_soon')}\n${S('t_turn_on_notifications_to_stay_updated')}</div>
+         <button class="dialog__btn" data-act="notify" style="border-radius:6px;padding:13.5px 0;background:${COLOR.containerBrand};${tx(14, 21, 600)}">${S('t_notify_me')}</button>`;
+    this.openLayer(`
+      <div class="dim dim--modal" style="background:rgba(0,0,0,.9)"></div>
+      <div class="dialog-wrap">
+        <div class="dialog" style="width:${width};background:${COLOR.popupGray01}">${body}</div>
+        ${notifOn ? '' : `<button class="dialog__close" data-act="close">${img('ic-close_16x16.png', 16)}<span style="${tx(15, 22, 500)}color:#FFFFFF">${S('t_close')}</span></button>`}
+      </div>`, () => log(this.name, '다이얼로그 바깥 탭 → 닫히지 않음'));
+    this.layer.querySelectorAll('[data-act]').forEach((b) => b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (b.dataset.act === 'notify') {
+        state.notif = true; syncNotif(); syncUrl(); renderCase();
+        log(this.name, '[Notify me] → 작품 알림 켜짐, 다이얼로그 닫힘 · 뷰어에 머묾');
+      } else log(this.name, `[${notifOn ? S('t_okay') : S('t_close')}] → 다이얼로그 닫힘 · 뷰어에 머묾`);
+      this.closeLayer();
+    }));
+  }
+
+  // PurchaseEpisodeModal · Ui202509 (보유 젬 10, 회차 가격 3젬, BUY_ONE 옵션 1개)
+  // 폰: BottomSlideMenu(gorhom BottomSheet) / 태블릿: PopupForTablet(가운데 400px)
+  openPurchase(isPreviewEpisode) {
+    const d = this.d;
+    const ord = isPreviewEpisode ? CUR_ORD : NEXT_ORD;
+    const gems = 10; const price = 3;
+    const gem = (size) => img('gem-3d-purple_16x16.png', size);
+    const ui = `
+      <div style="background:${COLOR.containerBase};padding-bottom:${d.tablet ? 20 : d.bottom + 16}px">
+        <div style="height:${d.tablet ? 40 : 16}px"></div>
+        <div style="margin:0 16px;padding:0 12px 0 4px;display:flex;align-items:center;justify-content:space-between;gap:4px">
+          <div></div>
+          <div style="display:flex;align-items:center;gap:4px">
+            <span style="${T('body1R')}color:#999CA8">${S('t_my_gems')}</span>
+            <span style="display:flex;align-items:center;gap:2px">${gem(16)}<span style="${T('body2M')}color:#FFFFFF">${gems}</span></span>
+          </div>
+        </div>
+        <div style="height:16px"></div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="position:relative;margin:0 16px;padding:16px 16px 16px 12px;background:#2B2E36;border-radius:8px;display:flex;align-items:center">
+            <div style="position:absolute;inset:0;border-radius:8px;border:2px solid #6166FF;pointer-events:none"></div>
+            <div style="flex:1;display:flex;align-items:center;min-width:0">
+              <div style="width:70px;height:50px;padding:3px;flex:none"><div class="ep-thumb" style="width:64px;height:44px;border-radius:3px"></div></div>
+              <div style="flex:1;margin:0 4px 0 8px;min-width:0">
+                <div style="${T('body2Sb')}color:#FFFFFF">${S('t_single_episode')}</div>
+                <div style="${tx(10, 14, 400)}color:#737885;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${S('t_episode_$ord', { ord })}</div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+              <span style="display:flex;align-items:center;gap:2px">${gem(16)}<span style="${T('body2M')}color:#FFFFFF">${price}</span></span>
+            </div>
+          </div>
+        </div>
+        <div style="height:24px"></div>
+        <div style="height:56px;margin:0 16px">
+          <button class="buy-btn" data-act="buy" style="background:#4D4AFF">
+            <span style="${T('body2Sb')}color:#FFFFFF">${S('t_buy_episode')}</span>
+            <span style="${T('body1R')}color:#FFFFFF">${S('t_$count_gems#2_other', { count: price })}</span>
+          </button>
+        </div>
+        <div style="height:18px"></div>
+      </div>`;
+    const sheet = d.tablet
+      ? `<div class="dim dim--modal" style="background:rgba(0,0,0,.9)"></div>
+         <div class="dialog-wrap"><div class="tablet-popup" style="width:400px;border-radius:12px;overflow:hidden">${ui}</div></div>`
+      : `<div class="dim dim--sheet" style="background:#000"></div>
+         <div class="sheet" style="background:${COLOR.containerBase}">
+           <div style="height:32px;display:flex;justify-content:center;padding-top:8px"><span style="width:48px;height:5px;border-radius:20px;background:#40424D"></span></div>
+           ${ui}
+         </div>`;
+    this.openLayer(sheet, () => {
+      log(this.name, '구매 시트 바깥 탭 → 시트만 닫힘 · 뷰어에 머묾');
+      this.closeLayer();
+    }, d.tablet ? 250 : 400);
+    this.layer.querySelector('[data-act="buy"]').addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (isPreviewEpisode) {
+        log(this.name, '구매 완료 → 이 회차 전체 열람 (프리뷰 해제)');
+        this.closeLayer();
+      } else {
+        log(this.name, '구매 완료 → 다음 화로 이동', null, true);
+        this.closeLayer(() => this.navigateNext(false));
+      }
+    });
+  }
+
+  reset(where) {
+    this.stopAnims();
+    this.busy = false;
+    this.moved = false;
+    this.layer.classList.remove('on', 'show'); this.layer.innerHTML = '';
+    this.nextEl.classList.remove('on');
+    this.toastEl.classList.remove('on');
+    if (this.v.mode === 'scroll') {
+      this.measure();
+      this.autoShown = false;
+      this.setOverlay(false, true);
+      // 회차 끝: footer가 화면 아래쪽에 보이기 직전
+      this.offset = where === 'start' ? 0 : clamp(this.footerEndOffset - this.d.h * 0.45, 0, this.max);
+      this.renderScroll();
+    } else {
+      this.footerOn = false; this.ft = 0;
+      this.page = where === 'start' ? 0 : this.pages - 1;
+      this.setOverlay(false, true);
+      this.renderPaged(0);
+    }
+  }
+
+  setScale(s) {
+    this.scale = s;
+    const pad = this.d.tablet ? 8 : 6;
+    this.frame.style.transform = `scale(${s})`;
+    this.box.style.width = `${(this.d.w + pad * 2) * s}px`;
+    this.box.style.height = `${(this.d.h + pad * 2) * s}px`;
+  }
+}
+
+// ───────────────────── 무대 배치 · 반응형 ─────────────────────
+const stage = document.getElementById('stage');
+let sims = [];
+
+// 기기 한 대를 화면 높이(넓은 화면)나 폭(좁은 화면)에 맞춰 최대한 크게 보여준다. 실제 크기(1배)보다 키우지는 않는다.
+function layout() {
+  if (!sims.length) return;
+  const sim = sims[0];
+  const pad = (sim.d.tablet ? 8 : 6) * 2;
+  const availW = stage.clientWidth;
+  const byWidth = availW / (sim.d.w + pad);
+  // 가로 꽉 차게: 무대 폭을 기기가 꽉 채운다(세로는 페이지 스크롤). 한 화면에 보기: 기기 전체가 화면 높이에 들어오게.
+  const top = stage.getBoundingClientRect().top + window.scrollY;
+  const byHeight = (window.innerHeight - Math.min(top, 110) - 16) / (sim.d.h + pad);
+  const s = state.size === 'fit' ? Math.min(byWidth, byHeight) : byWidth;
+  sim.setScale(Math.max(0.3, s));
+}
+
+function rebuild() {
+  syncUrl();
+  sims.forEach((s) => s.stopAnims());
+  stage.innerHTML = '';
+  sims = [new Sim(DEVICES.find((d) => d.id === state.device))];
+  sims.forEach((s) => stage.appendChild(s.fig));
+  layout();
+  sims.forEach((s) => s.reset('end'));
+  renderCase();
+  // 좁은 화면에서는 설정이 기기 아래에 있어서, 바꾸면 기기 화면으로 올려 준다
+  if (built && window.innerWidth <= 760) stage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  built = true;
+}
+let built = false;
+
+new ResizeObserver(layout).observe(stage);
+window.addEventListener('resize', layout);
+await document.fonts?.ready;
+rebuild();
+})();
+</script>
+</body>
+</html>

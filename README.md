@@ -13,6 +13,7 @@ works/<프로젝트>/<작업물>/index.html   작업물 원본 (그대로 iframe
 assets/css/             base(공통 토큰 · 헤더 · 칩) / home / project
 assets/js/              data(JSON 읽기) · header(⌘K 검색) · home · project · toast · dom
 pull-trigger/           예전 공유 주소를 새 주소로 넘겨주는 리다이렉트
+tools/                  앱 코드에서 값을 뽑아 오는 동기화 스크립트 (예: sync-next-episode-spec.mjs)
 ```
 
 ## 주소

@@ -3,7 +3,7 @@
     "branch": "jiyeon/app/feat/auto-next-episode",
     "commit": "79936ea428",
     "uncommittedFiles": 21,
-    "syncedAt": "2026-10-15T08:57:00.836Z"
+    "syncedAt": "2026-10-15T09:19:20.136Z"
   },
   "constants": {
     "pullAreaHeight": 160,
@@ -285,14 +285,14 @@
     "spinnerPurple01": "#808AED"
   },
   "sourceHashes": {
-    "getGestureNextAction.ts": "acd7ab500b04",
-    "useGestureNextGuide.ts": "1120ad96ebbd",
+    "getGestureNextAction.ts": "beb98fca17d5",
+    "useGestureNextGuide.ts": "5c036ba4dafd",
     "useEpisodeAction.ts": "fe6b1443bc5e",
-    "EpisodeSection/index.tsx": "6b88cfd4d2a3",
+    "EpisodeSection/index.tsx": "62829e16a550",
     "useViewerFooterAnimation.ts": "42bfd02c6d7c",
     "ViewerFooterContainer.tsx": "66a0b6faedd9",
     "NextEpisodeRevealGuide.tsx": "0842d39fef62",
-    "PullNextGuide/index.tsx": "0a8635b68169",
+    "PullNextGuide/index.tsx": "8b3080878874",
     "PullProgressRing.tsx": "7580c80c426a",
     "ImageVerticalViewer/index.tsx (당김 영역)": "d8a62ab5505e",
     "RootOriginal.tsx (구매 시트 · 이동)": "2f9696256aee",

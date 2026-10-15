@@ -421,21 +421,20 @@ const GROUPS = [
   {
     result: '알림 설정 유도',
     prd: '알림설정 유도 바텀시트 노출',
-    states: [
-      { id: 'latest', label: '최신화 (연재중)', action: 'up_to_date' },
-      // 웹에 Full ver. 이 있는 앱 전용 Preview 작품(isOriginalSeriesBridge)의 마지막 회차. 코드상 연재 중 최신화와 같이 처리된다.
-      { id: 'bridge', label: 'Preview 버전 작품 (마지막 회차)', action: 'up_to_date' },
-    ],
-  },
-  {
-    result: 'Footer 버튼과 같은 구매',
-    prd: '프리뷰 회차: Footer [Unlock this episode] 와 같은 동작',
-    states: [{ id: 'preview', label: '프리뷰 회차 (맛보기)', action: 'unlock_preview', preview: true }],
+    states: [{ id: 'latest', label: '최신화 (연재중)', action: 'up_to_date' }],
   },
   {
     result: '아무 동작 없음',
     prd: '스크롤 되지 않도록 조치 (스크롤해도 아무 동작 없음)',
     states: [{ id: 'completed', label: '마지막화 (종결)', action: 'none' }],
+  },
+  {
+    // 웹에 Full ver. 이 있고 앱에서는 Preview 만 보여주는 작품(isOriginalSeriesBridge)의 마지막 회차.
+    // Footer 에 [Up to date!] 가 떠서, 당기면 Footer 와 같은 다이얼로그가 나온다.
+    // (잠긴 회차 맛보기 프리뷰는 무료 회차와 같이 다음 화 상태를 따른다.)
+    result: 'Footer 와 같은 팝업',
+    prd: 'Viewer Footer 에서 나오는 팝업과 같은 팝업',
+    states: [{ id: 'preview', label: '프리뷰 회차', action: 'up_to_date' }],
   },
 ];
 const STATES = Object.fromEntries(GROUPS.flatMap((g) => g.states.map((s) => [s.id, { ...s, group: g }])));
@@ -452,7 +451,7 @@ const NEXT_ORD = 13;
 const urlp = new URLSearchParams(location.search);
 const state = {
   viewer: VIEWERS.some((v) => v.id === urlp.get('viewer')) ? urlp.get('viewer') : 'comic',
-  next: STATES[urlp.get('state')] ? urlp.get('state') : 'free',
+  next: STATES[urlp.get('state') === 'bridge' ? 'preview' : urlp.get('state')] ? (urlp.get('state') === 'bridge' ? 'preview' : urlp.get('state')) : 'free',
   notif: urlp.get('notif') === 'on',
   device: urlp.get('device') === 'tablet' ? 'tablet' : 'phone',
   size: urlp.get('size') === 'fit' ? 'fit' : 'width',
@@ -509,7 +508,6 @@ const img = (file, w, h = w, tint, style = '') => (tint
 const tx = (size, line, weight) => `font: ${weight} ${size}px/${line}px var(--font-app);`;
 
 function footerCta(st) {
-  if (st.preview) return { title: S('t_unlock_this_episode'), sub: S('t_unlock_with_gems_to_continue'), brand: true, chev: true };
   if (st.action === 'none') return { title: S('t_you_ve_finished_it'), disabled: true };
   if (st.action === 'up_to_date') return { title: S('t_up_to_date') };
   if (st.after === 'purchase') return { title: S('t_unlock_next_episode'), sub: S('t_unlock_with_gems_to_continue'), brand: true, chev: true };
@@ -619,7 +617,7 @@ function guideHtml(st) {
   return `
     <div class="guide" style="height:${K.guideHeight}px">
       ${ind}
-      <div style="${T('body1R')}color:${COLOR.textDisabled}">${{ next: S('t_keep_scrolling_for_the_next_episode'), unlock_preview: S('t_unlock_with_gems_to_continue'), up_to_date: S('t_next_episode_coming_soon') }[st.action]}</div>
+      <div style="${T('body1R')}color:${COLOR.textDisabled}">${(isNext ? S('t_keep_scrolling_for_the_next_episode') : S('t_next_episode_coming_soon'))}</div>
       ${isNext ? `<div style="${T('body3Sb')}color:${COLOR.textDisabled};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${S('t_episode_$ord', { ord: NEXT_ORD })}</div>` : ''}
     </div>`;
 }
@@ -627,7 +625,7 @@ function guideHtml(st) {
 // NextEpisodeRevealGuide
 function revealHtml(st, rtl) {
   const isNext = st.action === 'next';
-  const hint = { next: S('t_next_episode'), unlock_preview: S('t_unlock_with_gems_to_continue'), up_to_date: S('t_next_episode_coming_soon') }[st.action];
+  const hint = (isNext ? S('t_next_episode') : S('t_next_episode_coming_soon'));
   return `
     <div class="reveal__content" style="width:${K.swipeDistance}px">
       <div class="reveal__hint" style="flex-direction:${rtl ? 'row-reverse' : 'row'}">
@@ -1117,18 +1115,7 @@ class Sim {
     const cta = footerCta(st);
     const text = source === 'gesture' ? 'gesture' : cta.title;
     if (source === 'cta' && cta.disabled) { log(this.name, 'Footer 버튼 비활성 → 아무 동작 없음'); return; }
-    if (source === 'cta' && st.preview) {
-      log(this.name, 'Footer [Unlock this episode] → 이 회차 구매', "eventButton { type: 'preview_buy_now' }");
-      this.openPurchase(true);
-      return;
-    }
     if (st.action === 'none') return;
-    if (st.action === 'unlock_preview') {
-      // 프리뷰 CTA(Unlock this episode) 탭과 같은 동작
-      log(this.name, `${this.v.mode === 'scroll' ? '당김 끝에서 놓음' : `${K.swipeDistance}px 넘게 밀고 놓음`} → 이 회차 구매`, "eventButton { text: 'gesture', type: 'go_buy_episode' }", true);
-      this.openPurchase(true);
-      return;
-    }
     const how = source === 'gesture' ? (this.v.mode === 'scroll' ? '당김 끝에서 놓음' : `${K.swipeDistance}px 넘게 밀고 놓음`) : `Footer [${cta.title}] 탭`;
     if (st.action === 'up_to_date') {
       log(this.name, `${how} → 알림 다이얼로그`, `eventButton { text: '${text}', type: 'go_notification_popup' }`, true);

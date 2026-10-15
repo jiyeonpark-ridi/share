@@ -1,0 +1,84 @@
+/* ==========================================================================
+   홈 — 소개 + 상태 필터 + 프로젝트 리스트
+   ========================================================================== */
+
+.hero { padding-top: 88px; }
+.hero__title {
+  font-size: 44px; line-height: 1.3; font-weight: 700; letter-spacing: -0.02em;
+}
+.hero__title em { font-style: normal; color: var(--c-accent); }
+.hero__desc { margin-top: 16px; font-size: 17px; line-height: 1.65; color: var(--c-ink-2); }
+
+.home-body {
+  margin-top: 80px; padding-bottom: 120px;
+  display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 64px;
+  align-items: start;
+}
+
+/* status filter */
+.filter__label { font-size: 13px; font-weight: 700; color: var(--c-ink-3); margin-bottom: 8px; }
+.filter__list { display: grid; gap: 4px; }
+.filter__item {
+  width: 100%; height: 41px; padding: 0 12px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-radius: var(--r-md);
+  font-size: 15px; color: var(--c-ink);
+}
+.filter__item:hover { background: var(--c-soft); }
+.filter__count { font-size: 14px; color: var(--c-ink-3); }
+.filter__item[aria-pressed="true"] { background: var(--c-accent-soft); color: var(--c-accent); font-weight: 700; }
+.filter__item[aria-pressed="true"] .filter__count { color: var(--c-accent); font-weight: 500; }
+
+/* list */
+.list-head {
+  margin-top: 20px; padding-bottom: 14px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--c-line);
+}
+.list-head__count { font-size: 15px; font-weight: 700; }
+
+.project-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 88px 88px 132px 20px;
+  align-items: center; gap: 16px;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--c-line);
+}
+.project-row__name {
+  font-size: 17px; font-weight: 700; letter-spacing: -0.01em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.project-row__count, .project-row__date { font-size: 15px; color: var(--c-ink-3); }
+.project-row__meta { display: none; }
+.project-row .icon { color: var(--c-ink-4); }
+.project-row:hover .project-row__name, .project-row:hover .icon { color: var(--c-accent); }
+.project-row.is-done .project-row__name { color: var(--c-ink-3); }
+
+/* ---------- mobile ---------- */
+@media (max-width: 767px) {
+  .hero { padding-top: 48px; }
+  .hero__title { font-size: 36px; line-height: 1.25; }
+  .hero__desc { font-size: 15px; margin-top: 14px; }
+
+  .home-body { margin-top: 48px; padding-bottom: 72px; grid-template-columns: 1fr; gap: 16px; }
+  .filter__label { display: none; }
+  .filter__list {
+    display: flex; gap: 8px; overflow-x: auto;
+    margin: 0 calc(var(--gutter) * -1); padding: 0 var(--gutter);
+    scrollbar-width: none;
+  }
+  .filter__list::-webkit-scrollbar { display: none; }
+  .filter__item {
+    width: auto; height: 36px; padding: 0 14px; gap: 6px; flex-shrink: 0;
+    border: 1px solid var(--c-line); border-radius: var(--r-pill); font-size: 14px;
+  }
+  .filter__item[aria-pressed="true"] { border-color: var(--c-accent-soft); }
+  .filter__count { font-size: 14px; }
+
+  .project-row { grid-template-columns: minmax(0, 1fr) 18px; gap: 12px; padding: 18px 0; }
+  .project-row__name { font-size: 17px; }
+  .project-row__status, .project-row__count, .project-row__date { display: none; }
+  .project-row__meta { display: block; grid-column: 1; margin-top: -6px; font-size: 13px; color: var(--c-ink-3); }
+  .project-row__meta .status { font-size: 13px; }
+  .project-row .icon { grid-row: 1 / span 2; grid-column: 2; }
+}

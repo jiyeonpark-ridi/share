@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Jiyeon's Handoff Lab</title>
+<meta name="description" content="직접 개발한 디자인 시안과 인터랙션 프로토타입을 모아둔 공간이에요.">
+<meta property="og:title" content="Jiyeon's Handoff Lab">
+<meta property="og:description" content="직접 개발한 디자인 시안과 인터랙션 프로토타입을 모아둔 공간이에요.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/project.css">
+<script type="module" src="assets/js/project.js"></script>
+</head>
+<body class="page-project">
+  <header class="site-header" id="site-header"></header>
+
+  <main class="workspace" id="workspace" data-view="list">
+    <nav class="col col--projects" data-panel="projects" aria-label="프로젝트">
+      <button class="col__rail" type="button" title="프로젝트 칸 펴기 ( [ )">
+        <svg class="icon icon--sm" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="col__rail-label">프로젝트</span>
+      </button>
+      <div class="col__body">
+        <div class="col__head">
+          <div class="col__label-row">
+            <p class="col__label">프로젝트</p>
+            <button class="panel-toggle" type="button" data-panel-toggle="projects" aria-expanded="true" title="프로젝트 칸 접기 ( [ )">
+              <svg class="icon icon--sm" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M9.5 4.5v15M16 10l-2 2 2 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span class="sr-only">프로젝트 칸 접기</span>
+            </button>
+          </div>
+          <label class="field field--sm">
+            <svg class="icon icon--sm" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="2"/><path d="M16 16l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <input class="field__input" id="project-search" type="search" placeholder="프로젝트 찾기" autocomplete="off">
+          </label>
+        </div>
+        <div id="project-nav"></div>
+      </div>
+      <div class="col__resizer" role="separator" aria-orientation="vertical" aria-label="프로젝트 칸 폭 조절" tabindex="0" title="끌어서 폭 조절 · 더블클릭하면 기본 폭"></div>
+    </nav>
+
+    <section class="col col--works" data-panel="works" aria-label="작업물">
+      <button class="col__rail" type="button" title="작업물 칸 펴기 ( ] )">
+        <svg class="icon icon--sm" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="col__rail-label">작업물</span>
+      </button>
+      <div class="col__body" id="works-col"></div>
+      <div class="col__resizer" role="separator" aria-orientation="vertical" aria-label="작업물 칸 폭 조절" tabindex="0" title="끌어서 폭 조절 · 더블클릭하면 기본 폭"></div>
+    </section>
+
+    <section class="col col--viewer" id="viewer" aria-label="작업물 보기"></section>
+  </main>
+</body>
+</html>

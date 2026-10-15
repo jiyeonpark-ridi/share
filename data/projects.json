@@ -1,0 +1,24 @@
+{
+  "projects": [
+    {
+      "id": "next-episode",
+      "name": "다음화 전환경험 개선",
+      "status": "active",
+      "summary": "회차를 다 읽은 뒤 다음 화로 넘어가는 순간을 더 자연스럽게",
+      "start": "2026-09-22",
+      "links": [
+        { "label": "PRD", "url": "" },
+        { "label": "Figma", "url": "" }
+      ],
+      "works": [
+        {
+          "id": "pull-trigger",
+          "title": "다음 화 당김 표시 시안",
+          "type": "프로토타입",
+          "date": "2026-10-14",
+          "summary": "회차 끝에서 끌어올릴 때 \"지금 놓으면 다음 화\"를 보여주는 5가지 방법 비교"
+        }
+      ]
+    }
+  ]
+}

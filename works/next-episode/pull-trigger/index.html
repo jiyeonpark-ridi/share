@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>다음 화 당김 표시 시안</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Poppins:wght@400;500;600&display=swap">
+<style>
+/* Layout: 리뷰 보드처럼 상단 설명 + 5개 시안 폰을 같은 타이밍으로 나란히 비교 */
+:root {
+  --bg: #F3F4F7;
+  --panel: #FFFFFF;
+  --ink: #14171C;
+  --ink-2: #545763;
+  --line: #DEE3EB;
+  --accent: #4D4AFF;
+  --chip-bg: #EDF0F7;
+  --go: #1F8A5B;
+  --go-bg: #E3F4EC;
+  --font-ui: "Noto Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif;
+  --font-app: "Poppins", "Helvetica Neue", Arial, sans-serif;
+
+  /* 앱 뷰어 토큰 (테마와 무관하게 항상 어두운 뷰어) */
+  --app-surface-bottom: #000000;
+  --app-text-primary: #EDF0F7;
+  --app-text-tertiary: #999CA8;
+  --app-text-disabled: #545763;
+  --app-border-mute: #2B2E36;
+  --app-container-base: #1F2129;
+  --app-inverse: #14171C;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D0F12; --panel: #14171C; --ink: #EDF0F7; --ink-2: #999CA8; --line: #2B2E36;
+    --accent: #8A88FF; --chip-bg: #1F2129; --go: #5CD69E; --go-bg: #12301F;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D0F12; --panel: #14171C; --ink: #EDF0F7; --ink-2: #999CA8; --line: #2B2E36;
+  --accent: #8A88FF; --chip-bg: #1F2129; --go: #5CD69E; --go-bg: #12301F;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  line-height: 1.5;
+  padding: 32px 20px 56px;
+}
+.wrap { max-width: 1480px; margin: 0 auto; display: grid; gap: 28px; }
+
+header { display: grid; gap: 10px; max-width: 760px; }
+h1 { font-size: 26px; line-height: 1.3; margin: 0; text-wrap: balance; }
+.lede { margin: 0; color: var(--ink-2); font-size: 15px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.btn {
+  font: 500 14px/1 var(--font-ui);
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+.btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn { text-decoration: none; }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.hint { font-size: 13px; color: var(--ink-2); }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 20px;
+}
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.card-head { display: flex; align-items: baseline; gap: 8px; }
+.letter {
+  font: 700 13px/1 var(--font-ui);
+  color: var(--accent);
+  letter-spacing: 0.04em;
+}
+.card h2 { font-size: 16px; margin: 0; }
+.tag { font-size: 11px; color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 1px 7px; white-space: nowrap; }
+.desc { margin: 0; font-size: 13px; color: var(--ink-2); flex: 1; }
+
+.status {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 12px; color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.chip { border-radius: 999px; padding: 3px 9px; background: var(--chip-bg); color: var(--ink-2); font-weight: 500; }
+.chip.go { background: var(--go-bg); color: var(--go); }
+
+/* 폰: 375 x 560 기준으로 그리고 카드 폭에 맞춰 축소 */
+.phone {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 375 / 560;
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--app-surface-bottom);
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+.phone:active { cursor: grabbing; }
+.screen {
+  position: absolute; left: 0; top: 0;
+  width: 375px; height: 560px;
+  transform-origin: 0 0;
+  font-family: var(--font-app);
+}
+.strip { position: absolute; left: 0; right: 0; bottom: -160px; will-change: transform; }
+.cut {
+  height: 200px;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0) 40%, #000 100%),
+    repeating-linear-gradient(135deg, #2a2440 0 18px, #2f2849 18px 36px);
+}
+.footer-block { padding: 28px 24px 12px; display: grid; gap: 14px; justify-items: center; }
+.series { display: flex; gap: 12px; width: 100%; align-items: center; }
+.cover { width: 56px; height: 76px; border-radius: 6px; background: #1F2129; }
+.series-meta { display: grid; gap: 6px; }
+.series-meta b { color: var(--app-text-primary); font: 600 15px/1.2 var(--font-app); }
+.series-meta span { color: var(--app-text-disabled); font: 400 12px/1.2 var(--font-app); }
+.copyright { color: var(--app-text-disabled); font: 400 13px/1.4 var(--font-app); text-align: center; }
+.logo { color: var(--app-text-disabled); font: 600 15px/1 var(--font-app); letter-spacing: 0.02em; }
+
+.guide {
+  height: 112px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px;
+  will-change: transform;
+}
+.hint-text { font: 400 14px/20px var(--font-app); color: var(--app-text-disabled); }
+.title-text { font: 600 16px/22px var(--font-app); color: var(--app-text-disabled); }
+.inset { height: 86px; }
+.pull-area { height: 160px; }
+
+.indicator { position: relative; display: flex; align-items: center; justify-content: center; }
+.chev { width: 16px; height: 16px; display: block; }
+.chev path { fill: none; stroke: var(--app-text-disabled); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+.navbar {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  height: 86px;
+  background: #000;
+  padding: 12px 16px 0;
+  display: flex; justify-content: space-between; align-items: flex-start;
+  border-top-left-radius: 14px; border-top-right-radius: 14px;
+}
+.pill { height: 36px; border-radius: 18px; background: var(--app-container-base); }
+.pill.wide { width: 74px; }
+.pill.round { width: 36px; }
+.nav-right { display: flex; gap: 12px; }
+.home { position: absolute; bottom: 8px; left: 50%; width: 120px; height: 4px; margin-left: -60px; border-radius: 2px; background: #40424D; }
+
+.finger {
+  position: absolute; left: 80%; width: 46px; height: 46px; margin-left: -23px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.18);
+  border: 2px solid rgba(255,255,255,0.45);
+  opacity: 0;
+  pointer-events: none;
+}
+.next-screen {
+  position: absolute; inset: 0;
+  background: #000;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  color: var(--app-text-primary);
+  font: 600 20px/1.2 var(--font-app);
+  transform: translateY(100%);
+  will-change: transform;
+}
+.next-screen small { font: 400 13px/1 var(--font-app); color: var(--app-text-tertiary); }
+
+footer { font-size: 12px; color: var(--ink-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .next-screen { transition: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>다음 화 당김 표시 시안</h1>
+    <p class="lede">회차 끝에서 끌어올릴 때 "지금 손을 떼면 다음 화로 넘어간다"를 어떻게 보여줄지 5가지 방법을 같은 타이밍으로 비교해요. 안내 문구는 모든 시안에서 그대로예요.</p>
+    <div class="toolbar">
+      <button class="btn" id="play" type="button" aria-pressed="true">자동 재생 중</button>
+      <a class="btn" href="preview.gif" target="_blank" rel="noopener">GIF로 보기</a>
+      <span class="hint">폰 화면을 손가락이나 마우스로 위로 끌어올리면 직접 당겨볼 수 있어요. 160px을 끝까지 당겼다 놓아야 넘어가요.</span>
+    </div>
+  </header>
+
+  <section class="grid" id="grid" aria-label="시안 비교"></section>
+
+  <footer>색과 크기는 Manta 앱 디자인 시스템 값(text/disabled, text/primary, border/mute)을 그대로 썼어요. 당김 거리 160px, 안내 높이 112px, 하단 네비게이션 위 여백은 현재 코드와 같아요.</footer>
+</div>
+
+<script>
+const PULL = 160;
+const TRIGGER = PULL - 4; // 코드와 같이 끝에서 4px 이내에서 놓으면 이동
+const C = {
+  dis: '#545763', ter: '#999CA8', pri: '#EDF0F7', mute: '#2B2E36', inv: '#14171C',
+};
+const OPTIONS = [
+  { key: 'A', name: '원형 링', tag: '현재 코드', desc: '화살표를 감싼 링이 당긴 만큼 차오르고, 다 차면 링과 화살표가 흰색으로 밝아져요.' },
+  { key: 'B', name: '하단 진행 바', desc: '회차 번호 아래 얇은 바가 차오르고, 다 차면 바와 화살표가 흰색이 돼요.' },
+  { key: 'C', name: '화살표 → 버튼', desc: '당길수록 화살표가 올라가고 뒤에 원이 커져요. 끝에서 흰 원 버튼으로 바뀌어요.' },
+  { key: 'D', name: '안내 전체가 밝아짐', desc: '요소 추가 없이 화살표·문구·회차 번호가 점점 밝아지다가 흰색이 돼요.' },
+  { key: 'E', name: '점 3개 단계 표시', desc: '화살표 아래 점 3개가 하나씩 채워지고, 다 차면 흰색이 돼요.' },
+];
+
+const chevSVG = () => {
+  const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  s.setAttribute('viewBox', '0 0 16 16'); s.setAttribute('class', 'chev');
+  const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  p.setAttribute('d', 'M4 10l4-4 4 4');
+  s.appendChild(p);
+  return s;
+};
+const svgEl = (tag, attrs) => {
+  const e = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+};
+const mix = (a, b, t) => {
+  const pa = [1, 3, 5].map(i => parseInt(a.slice(i, i + 2), 16));
+  const pb = [1, 3, 5].map(i => parseInt(b.slice(i, i + 2), 16));
+  return 'rgb(' + pa.map((v, i) => Math.round(v + (pb[i] - v) * t)).join(',') + ')';
+};
+
+// 시안별 인디케이터: build()는 DOM을 만들고, render(p, reached)는 진행도에 맞춰 갱신
+const INDICATORS = {
+  A(guide) {
+    const box = document.createElement('div'); box.className = 'indicator'; box.style.width = box.style.height = '32px';
+    const R = 15, CIRC = 2 * Math.PI * R;
+    const svg = svgEl('svg', { width: 32, height: 32, viewBox: '0 0 32 32', style: 'position:absolute;inset:0;transform:rotate(-90deg)' });
+    const track = svgEl('circle', { cx: 16, cy: 16, r: R, fill: 'none', stroke: C.mute, 'stroke-width': 2 });
+    const arc = svgEl('circle', { cx: 16, cy: 16, r: R, fill: 'none', stroke: C.dis, 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-dasharray': CIRC, 'stroke-dashoffset': CIRC });
+    svg.append(track, arc);
+    const chev = chevSVG();
+    box.append(svg, chev);
+    guide.prepend(box);
+    return (p, reached) => {
+      arc.setAttribute('stroke-dashoffset', CIRC * (1 - p));
+      arc.setAttribute('stroke', reached ? C.pri : C.dis);
+      arc.style.opacity = p > 0.001 ? 1 : 0;
+      chev.querySelector('path').style.stroke = reached ? C.pri : C.dis;
+    };
+  },
+  B(guide) {
+    const chev = chevSVG(); guide.prepend(chev);
+    const track = document.createElement('div');
+    track.style.cssText = `width:64px;height:3px;border-radius:2px;background:${C.mute};overflow:hidden;margin-top:2px`;
+    const fill = document.createElement('div'); fill.style.cssText = 'height:100%;width:0;border-radius:2px';
+    track.appendChild(fill); guide.appendChild(track);
+    return (p, reached) => {
+      fill.style.width = (p * 100) + '%';
+      fill.style.background = reached ? C.pri : C.dis;
+      chev.querySelector('path').style.stroke = reached ? C.pri : C.dis;
+    };
+  },
+  C(guide) {
+    const box = document.createElement('div'); box.className = 'indicator'; box.style.width = box.style.height = '32px';
+    const circle = document.createElement('div'); circle.style.cssText = 'position:absolute;border-radius:50%;left:50%;top:50%';
+    const chev = chevSVG(); chev.style.position = 'relative';
+    box.append(circle, chev); guide.prepend(box);
+    return (p, reached) => {
+      const size = reached ? 32 : (p > 0 ? 16 + 16 * p : 0);
+      circle.style.width = circle.style.height = size + 'px';
+      circle.style.margin = (-size / 2) + 'px 0 0 ' + (-size / 2) + 'px';
+      circle.style.background = reached ? C.pri : C.mute;
+      chev.style.transform = `translateY(${reached ? 0 : -6 * p}px)`;
+      chev.querySelector('path').style.stroke = reached ? C.inv : C.dis;
+    };
+  },
+  D(guide) {
+    const chev = chevSVG(); guide.prepend(chev);
+    const texts = guide.querySelectorAll('.hint-text, .title-text');
+    return (p, reached) => {
+      const col = reached ? C.pri : (p < 0.5 ? mix(C.dis, C.ter, p / 0.5) : mix(C.ter, '#C2C7D4', (p - 0.5) / 0.5));
+      chev.querySelector('path').style.stroke = col;
+      texts.forEach(t => { t.style.color = col; });
+    };
+  },
+  E(guide) {
+    const chev = chevSVG(); guide.prepend(chev);
+    const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:6px';
+    const dots = [0, 1, 2].map(() => { const d = document.createElement('span'); d.style.cssText = 'width:6px;height:6px;border-radius:50%'; row.appendChild(d); return d; });
+    chev.after(row);
+    return (p, reached) => {
+      const filled = reached ? 3 : Math.min(2, Math.floor(p * 3 + 0.5));
+      dots.forEach((d, i) => { d.style.background = i < filled ? (reached ? C.pri : C.dis) : C.mute; });
+      chev.querySelector('path').style.stroke = reached ? C.pri : C.dis;
+    };
+  },
+};
+
+const grid = document.getElementById('grid');
+const phones = OPTIONS.map((opt) => {
+  const card = document.createElement('article'); card.className = 'card';
+  card.innerHTML = `
+    <div class="card-head"><span class="letter">${opt.key}</span><h2>${opt.name}</h2>${opt.tag ? `<span class="tag">${opt.tag}</span>` : ''}</div>
+    <div class="phone" role="img" aria-label="${opt.key} 시안 미리보기. 위로 끌어올려 직접 당겨볼 수 있어요.">
+      <div class="screen">
+        <div class="strip">
+          <div class="cut"></div>
+          <div class="footer-block">
+            <div class="series"><div class="cover"></div><div class="series-meta"><b>Series Title</b><span>Episode 12</span></div></div>
+            <div class="copyright">This series is protected under copyright law.</div>
+            <div class="logo">Manta</div>
+          </div>
+          <div class="guide">
+            <div class="hint-text">Keep scrolling for the next episode</div>
+            <div class="title-text">Episode 13</div>
+          </div>
+          <div class="inset"></div>
+          <div class="pull-area"></div>
+        </div>
+        <div class="navbar"><div class="pill wide"></div><div class="nav-right"><div class="pill round"></div><div class="pill round"></div></div><div class="home"></div></div>
+        <div class="finger"></div>
+        <div class="next-screen">Episode 13<small>다음 화로 이동</small></div>
+      </div>
+    </div>
+    <p class="desc">${opt.desc}</p>
+    <div class="status"><span class="pct">당김 0px</span><span class="chip">평소</span></div>`;
+  grid.appendChild(card);
+  const el = (s) => card.querySelector(s);
+  const phone = el('.phone');
+  const guide = el('.guide');
+  return {
+    phone, screen: el('.screen'), strip: el('.strip'), guide,
+    finger: el('.finger'), next: el('.next-screen'),
+    pct: el('.pct'), chip: el('.chip'),
+    render: INDICATORS[opt.key](guide),
+    pull: 0, nextT: 0, manual: false, manualUntil: 0, drag: null, anim: null,
+  };
+});
+
+// 카드 폭에 맞춰 375 x 560 화면을 축소
+const fit = () => phones.forEach(ph => { ph.screen.style.transform = `scale(${ph.phone.clientWidth / 375})`; });
+new ResizeObserver(fit).observe(grid);
+fit();
+
+function draw(ph, fingerOn) {
+  const p = Math.min(1, Math.max(0, ph.pull / PULL));
+  const reached = ph.pull >= TRIGGER;
+  ph.strip.style.transform = `translateY(${-ph.pull}px)`;
+  ph.guide.style.transform = `translateY(${p * PULL / 2}px)`; // 코드와 같이 안내가 절반 속도로 따라옴
+  ph.render(p, reached);
+  ph.finger.style.opacity = fingerOn ? 1 : 0;
+  ph.finger.style.top = (400 - ph.pull) + 'px';
+  ph.next.style.transform = `translateY(${(1 - ph.nextT) * 100}%)`;
+  ph.pct.textContent = `당김 ${Math.round(ph.pull)} / ${PULL}px`;
+  const state = ph.nextT > 0 ? '다음 화로 이동' : (reached ? '지금 놓으면 다음 화' : (ph.pull > 0 ? '놓으면 원위치' : '평소'));
+  ph.chip.textContent = state;
+  ph.chip.classList.toggle('go', reached || ph.nextT > 0);
+}
+
+// 자동 재생: 모든 시안이 같은 타이밍으로 당김 → 중간 멈춤 → 끝까지 → 놓고 다음 화
+const ease = t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const LOOP = 5600;
+function autoFrame(t) {
+  const s = t % LOOP;
+  if (s < 700) return { pull: 0, next: 0, finger: s > 400 };
+  if (s < 1700) return { pull: 80 * ease((s - 700) / 1000), next: 0, finger: true };
+  if (s < 2300) return { pull: 80, next: 0, finger: true };
+  if (s < 3200) return { pull: 80 + 80 * ease((s - 2300) / 900), next: 0, finger: true };
+  if (s < 3900) return { pull: PULL, next: 0, finger: true };
+  if (s < 4400) return { pull: PULL, next: ease((s - 3900) / 500), finger: false };
+  if (s < 5200) return { pull: PULL, next: 1, finger: false };
+  return { pull: 0, next: 1 - ease((s - 5200) / 400), finger: false };
+}
+
+let playing = true;
+let reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+if (reduced) playing = false;
+const playBtn = document.getElementById('play');
+const syncBtn = () => { playBtn.setAttribute('aria-pressed', String(playing)); playBtn.textContent = playing ? '자동 재생 중' : '자동 재생'; };
+syncBtn();
+playBtn.addEventListener('click', () => { playing = !playing; start = performance.now(); syncBtn(); });
+
+let start = performance.now();
+// GIF 녹화용: 정해진 시각의 장면을 그대로 그린다
+if (location.hash === '#capture') { playing = false; syncBtn(); }
+window.__renderAt = (t) => {
+  const f = autoFrame(t);
+  phones.forEach(ph => { ph.pull = f.pull; ph.nextT = f.next; ph.fingerOn = f.finger; draw(ph, f.finger); });
+};
+function tick(now) {
+  for (const ph of phones) {
+    if (ph.drag) { draw(ph, true); continue; }
+    if (ph.anim) {
+      const k = Math.max(0, Math.min(1, (now - ph.anim.t0) / ph.anim.dur));
+      ph.anim.step(ease(k));
+      if (k >= 1) { const done = ph.anim.done; ph.anim = null; done && done(); }
+      draw(ph, false); continue;
+    }
+    if (playing && now > ph.manualUntil) {
+      const f = autoFrame(now - start);
+      ph.pull = f.pull; ph.nextT = f.next; ph.fingerOn = false;
+      draw(ph, f.finger);
+    } else {
+      draw(ph, !!ph.fingerOn);
+    }
+  }
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+// 직접 당겨보기
+for (const ph of phones) {
+  ph.phone.addEventListener('pointerdown', (e) => {
+    if (ph.anim) return;
+    ph.phone.setPointerCapture(e.pointerId);
+    const scale = ph.phone.clientWidth / 375;
+    ph.nextT = 0;
+    ph.drag = { y0: e.clientY, scale, base: 0 };
+    ph.pull = 0;
+  });
+  ph.phone.addEventListener('pointermove', (e) => {
+    if (!ph.drag) return;
+    const dy = (ph.drag.y0 - e.clientY) / ph.drag.scale;
+    ph.pull = Math.min(PULL, Math.max(0, dy));
+  });
+  const release = () => {
+    if (!ph.drag) return;
+    ph.drag = null;
+    const from = ph.pull;
+    if (from >= TRIGGER) {
+      ph.anim = {
+        t0: performance.now(), dur: 450, step: k => { ph.nextT = k; },
+        done: () => {
+          ph.anim = {
+            t0: performance.now() + 700, dur: 400,
+            step: k => { ph.pull = 0; ph.nextT = 1 - Math.max(0, k); },
+            done: () => { ph.manualUntil = performance.now() + 2500; },
+          };
+        },
+      };
+    } else {
+      ph.anim = { t0: performance.now(), dur: 260, step: k => { ph.pull = from * (1 - k); }, done: () => { ph.manualUntil = performance.now() + 2500; } };
+    }
+    ph.manualUntil = Infinity;
+  };
+  ph.phone.addEventListener('pointerup', release);
+  ph.phone.addEventListener('pointercancel', release);
+}
+</script>
+</body>
+</html>

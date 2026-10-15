@@ -1,0 +1,173 @@
+/* ==========================================================================
+   프로젝트 상세 — 프로젝트 | 작업물 | 작업물 영역 (3칸)
+   ========================================================================== */
+
+.page-project { height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+
+.workspace {
+  /* 기본 폭. 사용자가 조절하면 panels.js가 --w-* 를 덮어쓴다 */
+  --w-projects-default: 260px;
+  --w-works-default: 340px;
+  flex: 1; min-height: 0;
+  display: grid;
+  grid-template-columns:
+    var(--w-projects, var(--w-projects-default))
+    var(--w-works, var(--w-works-default))
+    minmax(0, 1fr);
+}
+/* 폭 조절 손잡이가 경계선 밖으로 살짝 나오도록 칸 자체는 overflow를 열어 두고, 스크롤은 .col__body가 맡는다 */
+.col { position: relative; min-height: 0; display: flex; flex-direction: column; border-right: 1px solid var(--c-line); }
+.col:last-child { border-right: 0; }
+.col__body { flex: 1; min-height: 0; overflow-x: hidden; overflow-y: auto; }
+.col--projects { background: var(--c-side); }
+.col__head { padding: 20px 20px 14px; }
+.col__label-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.col__label { font-size: 13px; font-weight: 700; color: var(--c-ink-3); }
+
+/* ---------- panel : 접기 버튼 · 접힌 레일 · 폭 조절 손잡이 ---------- */
+.panel-toggle {
+  flex-shrink: 0;
+  width: 28px; height: 28px; margin: -6px -6px -6px 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: var(--r-sm); color: var(--c-ink-3);
+}
+.panel-toggle:hover { background: var(--c-hover); color: var(--c-ink); }
+
+.col__rail {
+  display: none;
+  flex: 1; width: 100%;
+  flex-direction: column; align-items: center; gap: 12px; padding-top: 18px;
+  color: var(--c-ink-3);
+}
+.col__rail:hover { background: var(--c-hover); color: var(--c-ink); }
+.col__rail-label { writing-mode: vertical-rl; font-size: 13px; font-weight: 700; letter-spacing: 0.04em; }
+.col.is-collapsed .col__rail { display: flex; }
+.col.is-collapsed .col__body { display: none; }
+
+.col__resizer {
+  position: absolute; top: 0; bottom: 0; right: -4px; z-index: 5;
+  width: 8px; cursor: col-resize; touch-action: none;
+}
+.col__resizer::after {
+  content: ""; position: absolute; top: 0; bottom: 0; left: 3px; width: 2px;
+  background: transparent; transition: background 0.15s;
+}
+.col__resizer:hover::after, .col__resizer:focus-visible::after, .is-resizing .col__resizer::after { background: var(--c-accent); }
+.col__resizer:focus-visible { outline: none; }
+.col__resizer[hidden] { display: none; }
+
+/* 드래그 중에는 iframe이 마우스를 가로채지 않게 */
+.is-resizing { cursor: col-resize; user-select: none; }
+.is-resizing iframe { pointer-events: none; }
+
+/* ---------- col 1 : projects ---------- */
+.pgroup__label { padding: 14px 20px 6px; font-size: 12px; font-weight: 700; color: var(--c-ink-3); }
+.pgroup__label span { margin-left: 4px; font-weight: 500; color: var(--c-ink-4); }
+.pnav__item {
+  position: relative;
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px 10px 20px;
+  font-size: 15px;
+}
+.pnav__item:hover { background: var(--c-soft); }
+.pnav__name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pnav__count { font-size: 13px; color: var(--c-ink-4); }
+.pnav__item.is-done .pnav__name { color: var(--c-ink-3); }
+.pnav__item[aria-current="page"] { background: var(--c-accent-soft); color: var(--c-accent); font-weight: 700; }
+.pnav__item[aria-current="page"] .pnav__name, .pnav__item[aria-current="page"] .pnav__count { color: var(--c-accent); }
+.pnav__item[aria-current="page"]::before {
+  content: ""; position: absolute; left: 20px; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 18px; border-radius: 2px; background: var(--c-accent);
+}
+.pnav__item[aria-current="page"] .pnav__name { padding-left: 11px; }
+
+/* ---------- col 2 : project header + works ---------- */
+.phead { padding: 22px 20px 16px; }
+.phead__back { display: none; }
+.phead__row { display: flex; align-items: center; gap: 10px; }
+.phead__name { flex: 1; min-width: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.35; }
+.phead__status { font-size: 12px; font-weight: 700; color: var(--c-ink-3); flex-shrink: 0; }
+.phead__status.status--active { color: var(--c-accent); }
+.phead__links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+
+.wtools { padding: 4px 20px 14px; }
+.wtools__row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.wtools__count { font-size: 13px; font-weight: 700; color: var(--c-ink-3); }
+
+.wlist { border-top: 1px solid var(--c-line); }
+.witem {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 16px 16px 20px;
+  border-bottom: 1px solid var(--c-line);
+}
+.witem:hover { background: var(--c-soft); }
+.witem__body { flex: 1; min-width: 0; }
+.witem__title { display: block; font-size: 16px; font-weight: 700; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.witem__meta { display: block; margin-top: 4px; font-size: 13px; color: var(--c-ink-3); }
+.witem .icon { color: var(--c-ink-4); }
+.witem[aria-current="true"] { background: var(--c-soft); }
+.witem[aria-current="true"] .witem__title, .witem[aria-current="true"] .icon { color: var(--c-accent); }
+
+/* ---------- col 3 : work viewer ---------- */
+.col--viewer { display: flex; flex-direction: column; overflow: hidden; }
+.vbar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 16px 24px; border-bottom: 1px solid var(--c-line);
+}
+.vbar__back { display: none; }
+.vbar__text { flex: 1; min-width: 0; }
+.vbar__title { font-size: 19px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vbar__meta { font-size: 13px; color: var(--c-ink-3); }
+
+.stage { position: relative; flex: 1; min-height: 0; background: var(--c-stage); padding: 24px; }
+.stage__frame {
+  width: 100%; height: 100%; display: block;
+  border: 1px solid var(--c-line); border-radius: var(--r-lg); background: var(--c-bg);
+}
+.stage__loading {
+  position: absolute; inset: 24px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--r-lg); background: var(--c-bg);
+  font-size: 14px; color: var(--c-ink-3);
+}
+.stage__placeholder {
+  height: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  border: 1.5px dashed #c9d5f5; border-radius: var(--r-lg); background: var(--c-bg);
+  text-align: center; color: var(--c-ink-3); font-size: 15px; font-weight: 700;
+}
+.stage__placeholder small { font-size: 13px; font-weight: 400; color: var(--c-ink-4); }
+
+/* ---------- tablet ---------- */
+@media (max-width: 1199px) {
+  .workspace { --w-projects-default: 220px; --w-works-default: 300px; }
+}
+
+/* ---------- mobile : 한 칸씩 (작업물 목록 ↔ 작업물 화면) ---------- */
+@media (max-width: 899px) {
+  .workspace { grid-template-columns: 1fr; }
+  .col--projects { display: none; }
+  .col { border-right: 0; }
+  /* 모바일은 한 칸씩 보기라 폭 조절 · 접기를 쓰지 않는다 */
+  .col__resizer, .col__rail, .panel-toggle { display: none !important; }
+  .col.is-collapsed .col__body { display: block; }
+  .workspace[data-view="list"] .col--viewer { display: none; }
+  .workspace[data-view="work"] .col--works { display: none; }
+  /* 목록 화면에서는 아직 고른 작업물이 없으므로 선택 표시를 지운다 */
+  .workspace[data-view="list"] .witem[aria-current="true"] { background: none; }
+  .workspace[data-view="list"] .witem[aria-current="true"] .witem__title { color: var(--c-ink); }
+  .workspace[data-view="list"] .witem[aria-current="true"] .icon { color: var(--c-ink-4); }
+
+  .phead__back, .vbar__back {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 13px; font-weight: 500; color: var(--c-ink-3);
+  }
+  .phead__back { margin-bottom: 12px; }
+  .vbar { flex-wrap: wrap; row-gap: 10px; padding: 12px var(--gutter) 14px; }
+  .vbar__back { width: 100%; }
+  .vbar__text { flex-basis: 100%; }
+  .vbar__title { font-size: 17px; }
+  .vbar .btn { height: 32px; }
+  .stage { padding: 12px; }
+  .stage__loading { inset: 12px; }
+}

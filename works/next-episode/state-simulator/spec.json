@@ -3,7 +3,7 @@
     "branch": "jiyeon/app/feat/auto-next-episode",
     "commit": "79936ea428",
     "uncommittedFiles": 21,
-    "syncedAt": "2026-10-15T09:19:20.136Z"
+    "syncedAt": "2026-10-15T09:31:26.137Z"
   },
   "constants": {
     "pullAreaHeight": 160,
@@ -52,7 +52,13 @@
     "t_single_episode": "Single Episode",
     "t_$count_gems#2_other": "{{count}} Gems",
     "t_comments": "Comments",
-    "t_reply": "Reply"
+    "t_reply": "Reply",
+    "t_this_is_the_final_episode": "This is the final episode",
+    "t_this_is_the_final_chapter": "This is the final chapter",
+    "t_this_is_the_final_volume": "This is the final volume",
+    "t_you_ve_read_every_episode_of_$title_find_your_next_stories_on_manta": "You’ve read every episode of {{title}}.\nFind your next stories on Manta!",
+    "t_you_ve_read_every_chapter_of_$title_find_your_next_stories_on_manta": "You’ve read every chapter of {{title}}.\nFind your next stories on Manta!",
+    "t_you_ve_read_every_volume_of_$title_find_your_next_stories_on_manta": "You’ve read every volume of {{title}}.\nFind your next stories on Manta!"
   },
   "text": {
     "display4Sb": {
@@ -285,16 +291,16 @@
     "spinnerPurple01": "#808AED"
   },
   "sourceHashes": {
-    "getGestureNextAction.ts": "beb98fca17d5",
-    "useGestureNextGuide.ts": "5c036ba4dafd",
+    "getGestureNextAction.ts": "7e38569f32ad",
+    "useGestureNextGuide.ts": "c2daa13402ac",
     "useEpisodeAction.ts": "fe6b1443bc5e",
-    "EpisodeSection/index.tsx": "62829e16a550",
+    "EpisodeSection/index.tsx": "06655539a779",
     "useViewerFooterAnimation.ts": "42bfd02c6d7c",
-    "ViewerFooterContainer.tsx": "66a0b6faedd9",
+    "ViewerFooterContainer.tsx": "aaf0d2b18b2f",
     "NextEpisodeRevealGuide.tsx": "0842d39fef62",
-    "PullNextGuide/index.tsx": "8b3080878874",
+    "PullNextGuide/index.tsx": "0424c2f13c6f",
     "PullProgressRing.tsx": "7580c80c426a",
-    "ImageVerticalViewer/index.tsx (당김 영역)": "d8a62ab5505e",
+    "ImageVerticalViewer/index.tsx (당김 영역)": "b63e610db65e",
     "RootOriginal.tsx (구매 시트 · 이동)": "2f9696256aee",
     "화면: components/pages/EpisodeViewer/ViewerFooter/index.tsx": "dd95b9fac928",
     "화면: components/pages/EpisodeViewer/ViewerFooter/styles.ts": "e4bab90c0a16",

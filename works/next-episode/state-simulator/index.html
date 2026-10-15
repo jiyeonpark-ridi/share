@@ -424,9 +424,9 @@ const GROUPS = [
     states: [{ id: 'latest', label: '최신화 (연재중)', action: 'up_to_date' }],
   },
   {
-    result: '아무 동작 없음',
-    prd: '스크롤 되지 않도록 조치 (스크롤해도 아무 동작 없음)',
-    states: [{ id: 'completed', label: '마지막화 (종결)', action: 'none' }],
+    result: '완독 안내 팝업',
+    prd: '완독 안내 팝업 (You’ve finished it!)',
+    states: [{ id: 'completed', label: '마지막화 (종결)', action: 'finished' }],
   },
   {
     // 웹에 Full ver. 이 있고 앱에서는 Preview 만 보여주는 작품(isOriginalSeriesBridge)의 마지막 회차.
@@ -443,6 +443,10 @@ const DEVICES = [
   { id: 'phone', name: 'Phone', model: 'iPhone 16', w: 393, h: 852, top: 54, bottom: 34, os: 'ios' },
   { id: 'tablet', name: 'Tablet', model: 'iPad mini', w: 744, h: 1133, top: 24, bottom: 20, os: 'ios', tablet: true },
 ];
+
+// 작품 단위 (getUnitTypeKeyBySeriesType): Comic = episode, Manga = chapter, Novel = volume
+const unitOf = () => ({ comic: 'episode', manga: 'chapter', novel: 'volume' }[VIEWERS.find((v) => v.id === state.viewer).kind]);
+const finalText = () => S(`t_this_is_the_final_${unitOf()}`);
 
 const CUR_ORD = 12;
 const NEXT_ORD = 13;
@@ -508,7 +512,7 @@ const img = (file, w, h = w, tint, style = '') => (tint
 const tx = (size, line, weight) => `font: ${weight} ${size}px/${line}px var(--font-app);`;
 
 function footerCta(st) {
-  if (st.action === 'none') return { title: S('t_you_ve_finished_it'), disabled: true };
+  if (st.action === 'finished') return { title: S('t_you_ve_finished_it'), disabled: true };
   if (st.action === 'up_to_date') return { title: S('t_up_to_date') };
   if (st.after === 'purchase') return { title: S('t_unlock_next_episode'), sub: S('t_unlock_with_gems_to_continue'), brand: true, chev: true };
   if (st.after === 'freepass') return { title: S('t_next_episode'), sub: S('t_free_pass_available'), clock: true, brand: true, chev: true };
@@ -617,7 +621,7 @@ function guideHtml(st) {
   return `
     <div class="guide" style="height:${K.guideHeight}px">
       ${ind}
-      <div style="${T('body1R')}color:${COLOR.textDisabled}">${(isNext ? S('t_keep_scrolling_for_the_next_episode') : S('t_next_episode_coming_soon'))}</div>
+      <div style="${T('body1R')}color:${COLOR.textDisabled}">${(st.action === 'finished' ? finalText() : isNext ? S('t_keep_scrolling_for_the_next_episode') : S('t_next_episode_coming_soon'))}</div>
       ${isNext ? `<div style="${T('body3Sb')}color:${COLOR.textDisabled};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${S('t_episode_$ord', { ord: NEXT_ORD })}</div>` : ''}
     </div>`;
 }
@@ -625,7 +629,7 @@ function guideHtml(st) {
 // NextEpisodeRevealGuide
 function revealHtml(st, rtl) {
   const isNext = st.action === 'next';
-  const hint = (isNext ? S('t_next_episode') : S('t_next_episode_coming_soon'));
+  const hint = (st.action === 'finished' ? finalText() : isNext ? S('t_next_episode') : S('t_next_episode_coming_soon'));
   return `
     <div class="reveal__content" style="width:${K.swipeDistance}px">
       <div class="reveal__hint" style="flex-direction:${rtl ? 'row-reverse' : 'row'}">
@@ -1115,7 +1119,11 @@ class Sim {
     const cta = footerCta(st);
     const text = source === 'gesture' ? 'gesture' : cta.title;
     if (source === 'cta' && cta.disabled) { log(this.name, 'Footer 버튼 비활성 → 아무 동작 없음'); return; }
-    if (st.action === 'none') return;
+    if (st.action === 'finished') {
+      log(this.name, '완독 안내 다이얼로그');
+      this.openFinishedDialog();
+      return;
+    }
     const how = source === 'gesture' ? (this.v.mode === 'scroll' ? '당김 끝에서 놓음' : `${K.swipeDistance}px 넘게 밀고 놓음`) : `Footer [${cta.title}] 탭`;
     if (st.action === 'up_to_date') {
       log(this.name, `${how} → 알림 다이얼로그`, `eventButton { text: '${text}', type: 'go_notification_popup' }`, true);
@@ -1214,6 +1222,25 @@ class Sim {
       } else log(this.name, `[${notifOn ? S('t_okay') : S('t_close')}] → 다이얼로그 닫힘 · 뷰어에 머묾`);
       this.closeLayer();
     }));
+  }
+
+  // 완결 작품 마지막 화: DefaultDialog2 (You've finished it! + Okay), Figma 580:7716
+  openFinishedDialog() {
+    const width = this.d.tablet ? '327px' : '85%';
+    const body = S(`t_you_ve_read_every_${unitOf()}_of_$title_find_your_next_stories_on_manta`, { title: 'Series Title' });
+    this.openLayer(`
+      <div class="dim dim--modal" style="background:rgba(0,0,0,.9)"></div>
+      <div class="dialog-wrap">
+        <div class="dialog" style="width:${width};background:${COLOR.popupGray01}">
+          <div style="${T('title1Sb')}color:#FFFFFF;text-align:center;max-width:275px;align-self:center;margin-bottom:12px">${S('t_you_ve_finished_it')}</div>
+          <div style="${tx(14, 19, 400)}color:#737885;text-align:center;max-width:320px;align-self:center;margin-bottom:30px;white-space:pre-line">${body}</div>
+          <button class="dialog__btn" data-act="close" style="border-radius:8px;height:48px;background:${COLOR.containerBrand};${tx(14, 21, 600)}">${S('t_okay')}</button>
+        </div>
+      </div>`, () => log(this.name, '다이얼로그 바깥 탭 → 닫히지 않음'));
+    this.layer.querySelector('[data-act="close"]').addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.closeLayer();
+    });
   }
 
   // PurchaseEpisodeModal · Ui202509 (보유 젬 10, 회차 가격 3젬, BUY_ONE 옵션 1개)

@@ -107,6 +107,10 @@ const STRING_KEYS = [
   't_a_free_pass_has_been_used', 't_buy_episode', 't_fill_up_gems',
   't_this_series_is_protected_under_copyright_law#2', 't_my_gems', 't_single_episode', 't_$count_gems#2_other',
   't_comments', 't_reply',
+  't_this_is_the_final_episode', 't_this_is_the_final_chapter', 't_this_is_the_final_volume',
+  't_you_ve_read_every_episode_of_$title_find_your_next_stories_on_manta',
+  't_you_ve_read_every_chapter_of_$title_find_your_next_stories_on_manta',
+  't_you_ve_read_every_volume_of_$title_find_your_next_stories_on_manta',
 ];
 const strings = {};
 for (const k of STRING_KEYS) {

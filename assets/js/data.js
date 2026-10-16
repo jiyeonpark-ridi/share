@@ -55,11 +55,17 @@ function normalizeProject(project) {
   };
 }
 
+/** projects.json 원본({ projects: [...] })을 화면용으로 정리한다. 관리자 모드도 같은 함수를 쓴다. */
+export function normalizeProjects(raw) {
+  return (raw?.projects ?? []).map(normalizeProject).sort(SORTERS.updated);
+}
+
+export const dataUrl = () => new URL("data/projects.json", ROOT).href;
+
 export async function loadProjects() {
-  const res = await fetch(new URL("data/projects.json", ROOT), { cache: "no-cache" });
+  const res = await fetch(dataUrl(), { cache: "no-cache" });
   if (!res.ok) throw new Error(`projects.json을 불러오지 못했어요 (${res.status})`);
-  const { projects = [] } = await res.json();
-  return projects.map(normalizeProject).sort(SORTERS.updated);
+  return normalizeProjects(await res.json());
 }
 
 export const matches = (query, ...fields) => {

@@ -3,7 +3,7 @@
 let el;
 let timer;
 
-export function toast(message) {
+export function toast(message, { duration = 1800 } = {}) {
   if (!el) {
     el = document.createElement("div");
     el.className = "toast";
@@ -13,7 +13,7 @@ export function toast(message) {
   el.textContent = message;
   el.classList.add("is-visible");
   clearTimeout(timer);
-  timer = setTimeout(() => el.classList.remove("is-visible"), 1800);
+  timer = setTimeout(() => el.classList.remove("is-visible"), duration);
 }
 
 export async function copyText(text) {

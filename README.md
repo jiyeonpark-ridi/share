@@ -11,7 +11,9 @@ project.html            상세: 프로젝트 | 작업물 | 작업물 영역(ifra
 data/projects.json      ★ 프로젝트 · 작업물 목록 (여기만 고치면 화면에 반영)
 works/<프로젝트>/<작업물>/index.html   작업물 원본 (그대로 iframe으로 띄움)
 assets/css/             base(공통 토큰 · 헤더 · 칩) / home / project
-assets/js/              data(JSON 읽기) · header(⌘K 검색) · home · project · toast · dom
+assets/js/              data(JSON 읽기) · header(⌘K 검색) · home · project · panels · toast · dom
+assets/js/admin/        관리자 모드 (로그인한 브라우저에서만 불러옴)
+admin/                  …/share/admin → 관리자 로그인으로 넘겨주는 주소
 pull-trigger/           예전 공유 주소를 새 주소로 넘겨주는 리다이렉트
 tools/                  앱 코드에서 값을 뽑아 오는 동기화 스크립트 (예: sync-next-episode-spec.mjs)
 ```
@@ -60,6 +62,18 @@ tools/                  앱 코드에서 값을 뽑아 오는 동기화 스크�
 1. `works/<프로젝트 id>/<작업물 id>/index.html`에 작업물을 넣는다 (이미지 등은 같은 폴더에).
 2. `data/projects.json`의 해당 프로젝트 `works`에 항목을 추가한다.
 3. 새 프로젝트면 `projects`에 항목을 추가한다.
+
+## 관리자 모드
+
+`…/share/admin`으로 접속해 GitHub 토큰을 한 번 등록하면, 그 브라우저에서만 관리 버튼이 보여요.
+
+- 토큰: GitHub → Settings → Developer settings → Fine-grained tokens
+  → Repository access는 이 레포만, Permissions는 **Contents: Read and write**. 만료 1년 추천
+- 할 수 있는 일: 프로젝트 만들기 · 수정 · 상태 변경 · 삭제(작업물 폴더 포함), 작업물 제목 수정 · 옮기기 · 삭제
+- 저장하면 레포에 바로 커밋되고 약 1분 뒤 사이트에 반영돼요. 여러 파일이 바뀌어도 커밋 하나로 묶어요.
+- 저장 직전에 최신 `projects.json`을 다시 읽어서, 그사이 handoff로 추가된 작업물을 덮어쓰지 않아요.
+- 로그아웃: 헤더의 "관리자 · 로그아웃". 토큰을 잃어버렸다면 GitHub에서 그 토큰만 삭제하면 권한이 바로 사라져요.
+- 로컬 서버에서 관리자 모드를 켜도 저장은 GitHub(실제 사이트)로 가요.
 
 ## 로컬에서 보기
 

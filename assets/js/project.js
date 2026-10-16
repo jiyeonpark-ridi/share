@@ -7,6 +7,7 @@ import { loadProjects, STATUS, STATUS_KEYS, SORTERS, projectHref, homeHref, form
 import { mountHeader } from "./header.js";
 import { toast, copyText } from "./toast.js";
 import { setupPanels } from "./panels.js";
+import { maybeStartAdmin } from "./admin-gate.js";
 
 const SITE = "Jiyeon's Handoff Lab";
 
@@ -22,6 +23,8 @@ const state = {
 };
 
 let panels = null;
+/** 관리자로 로그인했을 때만 채워진다 */
+let admin = null;
 
 const els = {
   workspace: $("#workspace"),
@@ -35,10 +38,23 @@ const els = {
 
 function readUrl() {
   const params = new URLSearchParams(location.search);
+  redirectMovedWork(params);
   state.project = state.projects.find((p) => p.id === params.get("p")) ?? null;
   const works = state.project?.works ?? [];
   state.workInUrl = params.has("w");
   state.work = works.find((w) => w.id === params.get("w")) ?? works[0] ?? null;
+}
+
+/** 작업물이 다른 프로젝트로 옮겨졌으면 예전 주소를 새 주소로 바꿔 준다 */
+function redirectMovedWork(params) {
+  const workId = params.get("w");
+  if (!workId) return;
+  const inProject = state.projects.find((p) => p.id === params.get("p"))?.works.some((w) => w.id === workId);
+  if (inProject) return;
+  const owner = state.projects.find((p) => p.works.some((w) => w.id === workId));
+  if (!owner) return;
+  params.set("p", owner.id);
+  history.replaceState(null, "", projectHref(owner.id, workId));
 }
 
 function navigate(href) {
@@ -97,6 +113,7 @@ function renderWorksCol() {
       <div class="phead__row">
         <h1 class="phead__name">${esc(p.name)}</h1>
         <span class="phead__status status--${p.status}">${STATUS[p.status].label}</span>
+        ${admin ? admin.moreButton("project-menu", p.id) : ""}
         <button class="panel-toggle" type="button" data-panel-toggle="works" aria-expanded="true" title="작업물 칸 접기 ( ] )">
           ${icons.panel}<span class="sr-only">작업물 칸 접기</span>
         </button>
@@ -134,7 +151,7 @@ function renderWorkList() {
   }
   list.innerHTML = visible.length
     ? visible.map((w) => `
-        <li>
+        <li class="work-item">
           <a class="witem" href="${esc(projectHref(p.id, w.id))}" data-nav ${w === state.work ? 'aria-current="true"' : ""}>
             <span class="witem__body">
               <span class="witem__title">${esc(w.title)}</span>
@@ -142,6 +159,7 @@ function renderWorkList() {
             </span>
             ${icons.chevron}
           </a>
+          ${admin ? admin.moreButton("work-menu", p.id, w.id) : ""}
         </li>`).join("")
     : `<li class="empty">찾는 작업물이 없어요</li>`;
 }
@@ -213,6 +231,7 @@ function bindEvents() {
   // 같은 페이지 안 이동 (프로젝트 · 작업물 · 뒤로)
   document.addEventListener("click", (e) => {
     const link = e.target.closest("a[data-nav]");
+    if (e.target.closest(".a-inline, [data-admin]")) return; // 관리자 편집 중에는 이동하지 않음
     if (!link || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
     e.preventDefault();
     if (link.href !== location.href) navigate(link.href);
@@ -249,11 +268,25 @@ async function init() {
     els.works.innerHTML = `<p class="empty">${esc(err.message)}</p>`;
     return;
   }
-  mountHeader($("#site-header"), state.projects);
+  mountHeader($("#site-header"), () => state.projects);
   readUrl();
   render();
   panels = setupPanels(els.workspace);
   bindEvents();
+
+  admin = await maybeStartAdmin({ onChange: applyAdminChange });
+  if (admin) applyAdminChange(admin.projects);
+}
+
+/** 관리자 저장 후 화면 갱신. 보던 프로젝트가 삭제됐으면 홈으로 */
+function applyAdminChange(projects, ctx = {}) {
+  state.projects = projects;
+  if (ctx.deletedProject && ctx.deletedProject === state.project?.id) {
+    location.href = homeHref();
+    return;
+  }
+  readUrl();
+  render();
 }
 
 init();

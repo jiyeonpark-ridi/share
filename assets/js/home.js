@@ -3,6 +3,7 @@
 import { $, esc, icons } from "./dom.js";
 import { loadProjects, STATUS, STATUS_KEYS, SORTERS, projectHref, dateLabel, matches } from "./data.js";
 import { mountHeader } from "./header.js";
+import { maybeStartAdmin } from "./admin-gate.js";
 
 const params = new URLSearchParams(location.search);
 const state = {
@@ -11,6 +12,9 @@ const state = {
   query: "",
   sort: "updated",
 };
+
+/** 관리자로 로그인했을 때만 채워진다 (⋯ 버튼 · + 새 프로젝트) */
+let admin = null;
 
 const els = {
   filter: $("#status-filter"),
@@ -37,7 +41,7 @@ function projectRow(p) {
   const status = STATUS[p.status].label;
   const works = p.works.length ? `작업물 ${p.works.length}` : "—";
   return `
-    <li>
+    <li class="project-item">
       <a class="project-row${p.status === "done" ? " is-done" : ""}" href="${esc(projectHref(p.id))}">
         <span class="project-row__name">${esc(p.name)}</span>
         <span class="project-row__status status status--${p.status}">${status}</span>
@@ -46,6 +50,7 @@ function projectRow(p) {
         <span class="project-row__meta"><span class="status status--${p.status}">${status}</span> · ${works} · ${esc(dateLabel(p))}</span>
         ${icons.chevron}
       </a>
+      ${admin ? admin.moreButton("project-menu", p.id) : ""}
     </li>`;
 }
 
@@ -95,10 +100,25 @@ async function init() {
     els.list.innerHTML = `<li class="empty">${esc(err.message)}</li>`;
     return;
   }
-  mountHeader($("#site-header"), state.projects);
+  mountHeader($("#site-header"), () => state.projects);
   renderFilter();
   renderList();
   bindEvents();
+
+  admin = await maybeStartAdmin({
+    onChange: (projects) => {
+      state.projects = projects;
+      renderFilter();
+      renderList();
+    },
+  });
+  if (admin) {
+    // 관리자 화면은 GitHub에서 바로 읽은 최신 목록을 쓴다
+    state.projects = admin.projects;
+    els.sort.insertAdjacentHTML("beforebegin", admin.newProjectButton());
+    renderFilter();
+    renderList();
+  }
 }
 
 init();

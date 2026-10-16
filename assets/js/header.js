@@ -5,7 +5,8 @@ import { homeHref, projectHref, matches, STATUS } from "./data.js";
 
 const MAX_PER_GROUP = 6;
 
-export function mountHeader(root, projects) {
+/** getProjects: 최신 목록을 돌려주는 함수 (관리자 모드에서 목록이 바뀌어도 검색이 따라가도록) */
+export function mountHeader(root, getProjects) {
   root.innerHTML = `
     <div class="container site-header__inner">
       <a class="brand" href="${homeHref()}">
@@ -26,7 +27,7 @@ export function mountHeader(root, projects) {
       </div>
     </div>`;
 
-  setupSearch(root.querySelector(".gsearch"), projects);
+  setupSearch(root.querySelector(".gsearch"), getProjects);
 }
 
 function searchResults(projects, query) {
@@ -44,7 +45,7 @@ function searchResults(projects, query) {
   return { projectHits, workHits };
 }
 
-function setupSearch(box, projects) {
+function setupSearch(box, getProjects) {
   const input = box.querySelector(".gsearch__input");
   const panel = box.querySelector(".gsearch__panel");
   let activeIndex = -1;
@@ -60,7 +61,7 @@ function setupSearch(box, projects) {
   const render = () => {
     const query = input.value.trim();
     if (!query) return close();
-    const { projectHits, workHits } = searchResults(projects, query);
+    const { projectHits, workHits } = searchResults(getProjects(), query);
     const group = (label, hits) =>
       hits.length
         ? `<div class="gsearch__group">${label}</div>` +

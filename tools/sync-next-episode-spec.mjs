@@ -111,6 +111,13 @@ const STRING_KEYS = [
   't_a_free_pass_has_been_used', 't_buy_episode', 't_fill_up_gems',
   't_this_series_is_protected_under_copyright_law#2', 't_my_gems', 't_single_episode', 't_single_chapter', 't_single_volume', 't_$count_gems#2_other',
   't_comments', 't_reply',
+  // 회차 끝 화면의 나머지 요소 (구매 유도 · 연결 작품 · 맞춤 추천 · 연관 작품 · 댓글 빈 상태 · 스포일러 · CTA 변형)
+  't_unlock_this_chapter', 't_unlock_this_volume', 't_completed', 't_ongoing',
+  't_$count_episodes#2_one', 't_$count_episodes#2_other', 't_$count_chapters_one', 't_$count_chapters_other',
+  't_$count_volumes_one', 't_$count_volumes_other', 't_personalized_matches_for_you', 't_if_you_enjoyed_$title',
+  't_event', 't_novel', 't_free_eps', 't_earn_gems', 't_$rate_off', 't_gem_back#2', 't_free_pass', 't_$count_more',
+  't_be_the_first_to_react', 't_add_a_comment#2', 't_spoiler_tap_to_reveal', 't_start_membership',
+  't_continue_reading_with_membership', 't_free_pass_available_in_$time', 't_$hour_h_$minute_m',
   't_you_ve_reached_the_final_episode', 't_you_ve_reached_the_final_chapter', 't_you_ve_reached_the_final_volume',
   't_you_ve_read_every_episode_of_$title_find_your_next_story_on_manta',
   't_you_ve_read_every_chapter_of_$title_find_your_next_story_on_manta',

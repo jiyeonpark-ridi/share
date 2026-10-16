@@ -3,7 +3,7 @@
     "branch": "jiyeon/app/feat/auto-next-episode",
     "commit": "79936ea428",
     "uncommittedFiles": 22,
-    "syncedAt": "2026-10-16T05:50:51.453Z"
+    "syncedAt": "2026-10-16T05:59:30.281Z"
   },
   "constants": {
     "pullAreaHeight": 160,
@@ -80,6 +80,7 @@
     "t_next_episode_coming_soon": "Pronto llega el próximo episodio.",
     "t_next_chapter_coming_soon": "Pronto llega el próximo capítulo.",
     "t_next_volume_coming_soon": "Pronto llega el próximo volumen.",
+    "t_next_episode": "Siguiente capítulo",
     "t_episode_$ord": "Capítulo {{ord}}",
     "t_volume_$ord": "Volumen 1",
     "t_up_to_date": "¡Estás al día!",
@@ -88,7 +89,9 @@
     "t_unlock_next_episode": "Desbloquear el próximo episodio",
     "t_unlock_next_chapter": "Desbloquear el próximo capítulo",
     "t_unlock_next_volume": "Desbloquear el próximo volumen",
+    "t_unlock_with_gems_to_continue": "¡Desbloquea con Gemas para continuar!",
     "t_free_pass_available": "Pase Gratis disponible",
+    "t_list": "Lista",
     "t_okay": "De acuerdo",
     "t_okay#2": "Aceptar",
     "t_close": "Cerrar",
@@ -99,6 +102,7 @@
     "t_buy_episode": "Comprar capítulo",
     "t_this_series_is_protected_under_copyright_law#2": "Esta serie está protegida por derechos de autor.",
     "t_my_gems": "Mis joyas",
+    "t_single_episode": "Capítulo individual",
     "t_$count_gems#2_other": "7 Gemas",
     "t_comments": "Comentarios",
     "t_reply": "Responder",

@@ -540,10 +540,23 @@ function footerCta(st) {
   return { title: S(`t_next_${unitOf()}`), sub: ordTitle(NEXT_ORD), brand: true, chev: true };
 }
 
+// 예시 데이터(작품명 · 댓글)는 서버에서 오는 내용이라 앱 문구가 아니다. 스페인어 작품처럼 보이게 언어에 맞춰 바꾼다.
+const SAMPLE = {
+  en: {
+    title: 'Series Title',
+    comments: ['That last panel… I was not ready. Need the next one right now!', 'The art in this episode is unreal. Every cut looks like a poster.'],
+  },
+  es: {
+    title: 'Título de la serie',
+    comments: ['Ese último panel… no estaba preparado. ¡Necesito el siguiente ya!', 'El arte de este capítulo es increíble. Cada viñeta parece un póster.'],
+  },
+};
+const seriesTitle = () => SAMPLE[lang()].title;
+
 // Footer/EpisodeCommentPreview (enableEpisodeComments 가 켜진 경우)
 const SAMPLE_COMMENTS = [
-  { author: 'moonlit_reader', body: 'That last panel… I was not ready. Need the next one right now!', replies: 12, likes: 248, best: true },
-  { author: 'yuna.k', body: 'The art in this episode is unreal. Every cut looks like a poster.', replies: 3, likes: 97, best: true },
+  { author: 'moonlit_reader', replies: 12, likes: 248, best: true },
+  { author: 'yuna.k', replies: 3, likes: 97, best: true },
 ];
 function commentPreviewHtml() {
   return `
@@ -561,7 +574,7 @@ function commentPreviewHtml() {
             <div style="display:flex;gap:6px">
               ${c.best ? `<div style="width:32px;padding-top:3px;flex:none"><span style="display:inline-block;border:1px solid #6166FF;border-radius:999px;padding:0 4px;${T('captionSb')}color:#6166FF">TOP</span></div>` : ''}
               <div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0">
-                <div style="${tx(14, 18, 400)}color:${COLOR.textPrimary};display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${c.body}</div>
+                <div style="${tx(14, 18, 400)}color:${COLOR.textPrimary};display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${SAMPLE[lang()].comments[i]}</div>
                 <div style="display:flex;gap:12px;align-items:center">
                   <span style="${T('body1M')}color:${COLOR.textTertiary}">${S('t_reply')} ${c.replies}</span>
                   <span style="display:flex;gap:4px;align-items:center">${img('ic-heart_16x16.svg', 16, 16, COLOR.textTertiary)}<span style="${T('body1M')}color:${COLOR.textTertiary}">${c.likes}</span></span>
@@ -589,7 +602,7 @@ function footerHtml(st, d) {
             <div class="thumb"></div>
             <div style="flex:1;display:flex;flex-direction:column;min-width:0">
               <div style="display:flex;flex-direction:column;gap:4px;padding:0 4px">
-                <div style="${T('body3M')}color:${COLOR.textPrimary}">Series Title</div>
+                <div style="${T('body3M')}color:${COLOR.textPrimary}">${seriesTitle()}</div>
                 <div style="${T('body1R')}color:${COLOR.textTertiary}">${ordTitle(CUR_ORD)}</div>
               </div>
               <div style="flex:1;display:flex;align-items:flex-end;gap:8px">
@@ -745,7 +758,7 @@ class Sim {
           <span style="position:absolute;left:8px;top:10px">${img('back_white_36x36.svg', 36)}</span>
           <div style="height:40px;margin:8px;padding:0 68px;display:flex;flex-direction:column;align-items:center;justify-content:center">
             <div style="${tx(14, 21, 600)}color:#FFFFFF;text-align:center">${epTitle}</div>
-            <div style="${tx(11, 17, 400)}color:#737885;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">Series Title</div>
+            <div style="${tx(11, 17, 400)}color:#737885;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${seriesTitle()}</div>
           </div>
           <span style="position:absolute;right:8px;top:10px">${img('highlights-list_36x36-2.png', 36)}</span>
         </div>
@@ -766,7 +779,7 @@ class Sim {
         <div style="flex:1;padding-bottom:8px;display:flex;flex-direction:column;align-items:center;min-width:0">
           <div style="${T('body2Sb')}color:${COLOR.textPrimary};text-align:center">${epTitle}</div>
           <div style="height:2px"></div>
-          <div style="${T('body1R')}color:${COLOR.textTertiary};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">Series Title</div>
+          <div style="${T('body1R')}color:${COLOR.textTertiary};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${seriesTitle()}</div>
         </div>
         <div style="width:36px;flex:none"></div>
         <div class="corner corner--shade-down" style="top:100%">${img('bottom-left-1_20x20.png', 20, 20, null, 'transform:rotate(90deg)')}${img('bottom-left-1_20x20.png', 20, 20, null, 'transform:rotate(180deg)')}</div>`;
@@ -1248,7 +1261,7 @@ class Sim {
   // 완결 작품 마지막 화: DefaultDialog2 (You've finished it! + Okay), Figma 580:7716
   openFinishedDialog() {
     const width = this.d.tablet ? '327px' : '85%';
-    const body = S(`t_you_ve_read_every_${unitOf()}_of_$title_find_your_next_story_on_manta`, { title: 'Series Title' });
+    const body = S(`t_you_ve_read_every_${unitOf()}_of_$title_find_your_next_story_on_manta`, { title: seriesTitle() });
     this.openLayer(`
       <div class="dim dim--modal" style="background:rgba(0,0,0,.9)"></div>
       <div class="dialog-wrap">

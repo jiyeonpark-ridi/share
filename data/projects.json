@@ -1,14 +1,28 @@
 {
   "projects": [
     {
+      "id": "project-ak7p9",
+      "name": "테스트 프로젝트 (자동 확인용)",
+      "summary": "관리자 저장 기능 확인용. 곧 삭제돼요",
+      "status": "active",
+      "links": [],
+      "works": []
+    },
+    {
       "id": "next-episode",
       "name": "다음화 전환경험 개선",
       "status": "active",
       "summary": "회차를 다 읽은 뒤 다음 화로 넘어가는 순간을 더 자연스럽게",
       "start": "2026-09-22",
       "links": [
-        { "label": "PRD", "url": "" },
-        { "label": "Figma", "url": "" }
+        {
+          "label": "PRD",
+          "url": ""
+        },
+        {
+          "label": "Figma",
+          "url": ""
+        }
       ],
       "works": [
         {

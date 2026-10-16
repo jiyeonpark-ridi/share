@@ -67,7 +67,7 @@ h1 { font-size: 17px; line-height: 1.3; margin: 0; white-space: nowrap; }
 .seg.seg--row { display: flex; gap: 6px; }
 .seg.seg--row label { grid-auto-flow: column; align-items: baseline; gap: 6px; padding: 8px 14px; }
 .banner { border-radius: 10px; padding: 10px 14px; font-size: 13px; background: var(--warn-bg); color: var(--warn); }
-.banner[hidden], #lang-section[hidden] { display: none; }
+.banner[hidden], #lang-section[hidden], #unit-section[hidden] { display: none; }
 
 .layout {
   display: grid;
@@ -345,6 +345,13 @@ h1 { font-size: 17px; line-height: 1.3; margin: 0; white-space: nowrap; }
           <label><input type="radio" name="lang" value="es">ES</label>
         </div>
       </section>
+      <section id="unit-section">
+        <h2>작품 단위</h2>
+        <div class="seg" id="unit-seg">
+          <label><input type="radio" name="unit" value="chapter">Chapter</label>
+          <label><input type="radio" name="unit" value="volume">Volume</label>
+        </div>
+      </section>
       <section>
         <h2>다음 화 상태</h2>
         <div class="states" id="states"></div>
@@ -453,8 +460,9 @@ const DEVICES = [
   { id: 'tablet', name: 'Tablet', model: 'iPad mini', w: 744, h: 1133, top: 24, bottom: 20, os: 'ios', tablet: true },
 ];
 
-// 작품 단위 (getUnitTypeKeyBySeriesType): Comic = episode, Manga = chapter, Novel = volume
-const unitOf = () => ({ comic: 'episode', manga: 'chapter', novel: 'volume' }[VIEWERS.find((v) => v.id === state.viewer).kind]);
+// 작품 단위 (getUnitTypeKeyBySeriesType)
+// Comic(WEBTOON) = episode. Novel · Manga 뷰어는 CHAPTER_NOVEL · CHAPTER_MANGA = chapter, EBOOK_NOVEL · EBOOK_MANGA = volume.
+const unitOf = () => (state.viewer === 'comic' ? 'episode' : state.unit);
 const finalText = () => S(`t_you_ve_reached_the_final_${unitOf()}`);
 // useGetEpisodeData.getEpisodeOrdTitle: Episode n / Chapter n / Volume n
 const ordTitle = (ord) => S(`t_${unitOf()}_$ord`, { ord });
@@ -471,12 +479,14 @@ const state = {
   device: urlp.get('device') === 'tablet' ? 'tablet' : 'phone',
   size: urlp.get('size') === 'fit' ? 'fit' : 'width',
   lang: urlp.get('lang') === 'es' ? 'es' : 'en',
+  unit: urlp.get('unit') === 'volume' ? 'volume' : 'chapter',
 };
 const syncUrl = () => {
   const p = new URLSearchParams({
     viewer: state.viewer, state: state.next, notif: state.notif ? 'on' : 'off', device: state.device, size: state.size,
   });
   if (state.viewer === 'comic') p.set('lang', state.lang);
+  else p.set('unit', state.unit);
   history.replaceState(null, '', `?${p}`);
 };
 
@@ -502,7 +512,15 @@ const langSection = document.getElementById('lang-section');
 const langSeg = document.getElementById('lang-seg');
 langSeg.querySelector(`input[value="${state.lang}"]`).checked = true;
 langSeg.addEventListener('change', (e) => { state.lang = e.target.value; rebuild(); });
-const syncLang = () => { langSection.hidden = state.viewer !== 'comic'; };
+const unitSection = document.getElementById('unit-section');
+const unitSeg = document.getElementById('unit-seg');
+unitSeg.querySelector(`input[value="${state.unit}"]`).checked = true;
+unitSeg.addEventListener('change', (e) => { state.unit = e.target.value; rebuild(); });
+// 언어는 Comic 에서만, 작품 단위는 Novel · Manga 에서만 고른다.
+const syncLang = () => {
+  langSection.hidden = state.viewer !== 'comic';
+  unitSection.hidden = state.viewer === 'comic';
+};
 syncLang();
 viewerSeg.addEventListener('change', syncLang);
 
@@ -1301,7 +1319,7 @@ class Sim {
             <div style="flex:1;display:flex;align-items:center;min-width:0">
               <div style="width:70px;height:50px;padding:3px;flex:none"><div class="ep-thumb" style="width:64px;height:44px;border-radius:3px"></div></div>
               <div style="flex:1;margin:0 4px 0 8px;min-width:0">
-                <div style="${T('body2Sb')}color:#FFFFFF">${S('t_single_episode')}</div>
+                <div style="${T('body2Sb')}color:#FFFFFF">${S(`t_single_${unitOf()}`)}</div>
                 <div style="${tx(10, 14, 400)}color:#737885;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ordTitle(ord)}</div>
               </div>
             </div>

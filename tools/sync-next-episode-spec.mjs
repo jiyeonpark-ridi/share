@@ -109,7 +109,7 @@ const STRING_KEYS = [
   't_turn_on_notifications_to_stay_updated',
   't_you_re_all_set_we_ll_notify_you_when_the_next_episode_is_available',
   't_a_free_pass_has_been_used', 't_buy_episode', 't_fill_up_gems',
-  't_this_series_is_protected_under_copyright_law#2', 't_my_gems', 't_single_episode', 't_$count_gems#2_other',
+  't_this_series_is_protected_under_copyright_law#2', 't_my_gems', 't_single_episode', 't_single_chapter', 't_single_volume', 't_$count_gems#2_other',
   't_comments', 't_reply',
   't_you_ve_reached_the_final_episode', 't_you_ve_reached_the_final_chapter', 't_you_ve_reached_the_final_volume',
   't_you_ve_read_every_episode_of_$title_find_your_next_story_on_manta',

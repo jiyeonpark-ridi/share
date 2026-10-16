@@ -3,7 +3,7 @@
     "branch": "jiyeon/app/feat/auto-next-episode",
     "commit": "79936ea428",
     "uncommittedFiles": 22,
-    "syncedAt": "2026-10-16T05:59:30.281Z"
+    "syncedAt": "2026-10-16T08:31:42.098Z"
   },
   "constants": {
     "pullAreaHeight": 160,
@@ -62,6 +62,8 @@
     "t_this_series_is_protected_under_copyright_law#2": "This series is protected under copyright law.",
     "t_my_gems": "My Gems",
     "t_single_episode": "Single Episode",
+    "t_single_chapter": "Single Chapter",
+    "t_single_volume": "Single Volume",
     "t_$count_gems#2_other": "{{count}} Gems",
     "t_comments": "Comments",
     "t_reply": "Reply",

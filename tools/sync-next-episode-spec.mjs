@@ -49,6 +49,7 @@ const P = {
   ebookControl: 'components/blocks/202308/ViewerController/BottomLine/styles.ts',
   tokens: 'styles/tokens.ts',
   en: 'i18n/en.json',
+  es: 'i18n/es.json',
 };
 
 // ── 숫자 ────────────────────────────────────────────────
@@ -98,25 +99,31 @@ for (const [, k, ref] of tokensSrc.matchAll(/^\s{2}(\w+): colorBaseTokens\.(\w+)
 // ── 문구 ────────────────────────────────────────────────
 const en = JSON.parse(read(P.en));
 const STRING_KEYS = [
-  't_keep_scrolling_for_the_next_episode', 't_next_episode', 't_next_episode_coming_soon',
-  't_episode_$ord', 't_up_to_date', 't_you_ve_finished_it', 't_unlock_this_episode',
-  't_unlock_next_episode', 't_unlock_with_gems_to_continue', 't_free_pass_available',
-  't_add_to_your_unlocked_library_with_gems', 't_list', 't_okay', 't_close', 't_notify_me',
+  't_keep_scrolling_for_the_next_episode', 't_keep_scrolling_for_the_next_chapter',
+  't_keep_scrolling_for_the_next_volume', 't_next_episode_coming_soon#2', 't_next_episode_coming_soon',
+  't_next_chapter_coming_soon', 't_next_volume_coming_soon',
+  't_next_episode', 't_next_chapter', 't_next_volume', 't_episode_$ord', 't_chapter_$ord', 't_volume_$ord',
+  't_up_to_date', 't_you_ve_finished_it', 't_unlock_this_episode',
+  't_unlock_next_episode', 't_unlock_next_chapter', 't_unlock_next_volume', 't_unlock_with_gems_to_continue', 't_free_pass_available',
+  't_add_to_your_unlocked_library_with_gems', 't_list', 't_okay', 't_okay#2', 't_close', 't_notify_me',
   't_turn_on_notifications_to_stay_updated',
   't_you_re_all_set_we_ll_notify_you_when_the_next_episode_is_available',
   't_a_free_pass_has_been_used', 't_buy_episode', 't_fill_up_gems',
   't_this_series_is_protected_under_copyright_law#2', 't_my_gems', 't_single_episode', 't_$count_gems#2_other',
   't_comments', 't_reply',
-  't_this_is_the_final_episode', 't_this_is_the_final_chapter', 't_this_is_the_final_volume',
-  't_you_ve_read_every_episode_of_$title_find_your_next_stories_on_manta',
-  't_you_ve_read_every_chapter_of_$title_find_your_next_stories_on_manta',
-  't_you_ve_read_every_volume_of_$title_find_your_next_stories_on_manta',
+  't_you_ve_reached_the_final_episode', 't_you_ve_reached_the_final_chapter', 't_you_ve_reached_the_final_volume',
+  't_you_ve_read_every_episode_of_$title_find_your_next_story_on_manta',
+  't_you_ve_read_every_chapter_of_$title_find_your_next_story_on_manta',
+  't_you_ve_read_every_volume_of_$title_find_your_next_story_on_manta',
 ];
 const strings = {};
 for (const k of STRING_KEYS) {
   if (!(k in en)) fail(`문구 ${k} 가 en.json 에 없어요`);
   strings[k] = en[k];
 }
+// 스페인어(Comic 만). es.json 에 없는 키는 앱처럼 영어로 보이므로 넣지 않는다(시뮬레이터가 영어로 폴백).
+const es = JSON.parse(read(P.es));
+const stringsEs = Object.fromEntries(STRING_KEYS.filter((k) => k in es).map((k) => [k, es[k]]));
 
 // ── 동작 로직 지문 ───────────────────────────────────────
 // 파일 전체가 큰 곳은 다음 화 전환과 관련된 부분만 잘라 본다(관계없는 수정으로 경고가 뜨지 않게).
@@ -203,6 +210,7 @@ const spec = {
   },
   constants: { ...constants, indicator },
   strings,
+  stringsEs,
   text,
   color,
   sourceHashes,

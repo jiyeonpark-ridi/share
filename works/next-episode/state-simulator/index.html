@@ -67,7 +67,7 @@ h1 { font-size: 17px; line-height: 1.3; margin: 0; white-space: nowrap; }
 .seg.seg--row { display: flex; gap: 6px; }
 .seg.seg--row label { grid-auto-flow: column; align-items: baseline; gap: 6px; padding: 8px 14px; }
 .banner { border-radius: 10px; padding: 10px 14px; font-size: 13px; background: var(--warn-bg); color: var(--warn); }
-.banner[hidden] { display: none; }
+.banner[hidden], #lang-section[hidden] { display: none; }
 
 .layout {
   display: grid;
@@ -350,6 +350,13 @@ h1 { font-size: 17px; line-height: 1.3; margin: 0; white-space: nowrap; }
         </div>
         <p class="hint">최신화(연재중)에서 뜨는 다이얼로그가 달라져요.</p>
       </section>
+      <section id="lang-section">
+        <h2>언어</h2>
+        <div class="seg" id="lang-seg">
+          <label><input type="radio" name="lang" value="en">EN</label>
+          <label><input type="radio" name="lang" value="es">ES</label>
+        </div>
+      </section>
       <section>
         <h2>기기</h2>
         <div class="seg" id="devices"></div>
@@ -379,7 +386,9 @@ try {
 }
 const K = SPEC.constants;
 const COLOR = SPEC.color;
-const S = (key, vars = {}) => (SPEC.strings[key] || key).replace(/\{\{(\w+)\}\}/g, (_, v) => vars[v] ?? '');
+// 스페인어는 Comic 만 지원한다. es.json 에 없는 문구는 앱처럼 영어로 보인다.
+const lang = () => (state.viewer === 'comic' ? state.lang : 'en');
+const S = (key, vars = {}) => ((lang() === 'es' && SPEC.stringsEs?.[key]) || SPEC.strings[key] || key).replace(/\{\{(\w+)\}\}/g, (_, v) => vars[v] ?? '');
 const T = (name) => { const t = SPEC.text[name]; return `font: ${t.weight} ${t.size}px/${t.line}px var(--font-app);`; };
 const PULL = K.pullAreaHeight;
 
@@ -446,7 +455,9 @@ const DEVICES = [
 
 // 작품 단위 (getUnitTypeKeyBySeriesType): Comic = episode, Manga = chapter, Novel = volume
 const unitOf = () => ({ comic: 'episode', manga: 'chapter', novel: 'volume' }[VIEWERS.find((v) => v.id === state.viewer).kind]);
-const finalText = () => S(`t_this_is_the_final_${unitOf()}`);
+const finalText = () => S(`t_you_ve_reached_the_final_${unitOf()}`);
+// useGetEpisodeData.getEpisodeOrdTitle: Episode n / Chapter n / Volume n
+const ordTitle = (ord) => S(`t_${unitOf()}_$ord`, { ord });
 
 const CUR_ORD = 12;
 const NEXT_ORD = 13;
@@ -459,11 +470,13 @@ const state = {
   notif: urlp.get('notif') === 'on',
   device: urlp.get('device') === 'tablet' ? 'tablet' : 'phone',
   size: urlp.get('size') === 'fit' ? 'fit' : 'width',
+  lang: urlp.get('lang') === 'es' ? 'es' : 'en',
 };
 const syncUrl = () => {
   const p = new URLSearchParams({
     viewer: state.viewer, state: state.next, notif: state.notif ? 'on' : 'off', device: state.device, size: state.size,
   });
+  if (state.viewer === 'comic') p.set('lang', state.lang);
   history.replaceState(null, '', `?${p}`);
 };
 
@@ -484,6 +497,14 @@ const notifSeg = document.getElementById('notif-seg');
 const syncNotif = () => { notifSeg.querySelector(`input[value="${state.notif ? 'on' : 'off'}"]`).checked = true; };
 syncNotif();
 notifSeg.addEventListener('change', (e) => { state.notif = e.target.value === 'on'; syncUrl(); renderCase(); });
+
+const langSection = document.getElementById('lang-section');
+const langSeg = document.getElementById('lang-seg');
+langSeg.querySelector(`input[value="${state.lang}"]`).checked = true;
+langSeg.addEventListener('change', (e) => { state.lang = e.target.value; rebuild(); });
+const syncLang = () => { langSection.hidden = state.viewer !== 'comic'; };
+syncLang();
+viewerSeg.addEventListener('change', syncLang);
 
 const devicesEl = document.getElementById('devices');
 devicesEl.innerHTML = DEVICES.map((d) => `
@@ -514,9 +535,9 @@ const tx = (size, line, weight) => `font: ${weight} ${size}px/${line}px var(--fo
 function footerCta(st) {
   if (st.action === 'finished') return { title: S('t_you_ve_finished_it'), disabled: true };
   if (st.action === 'up_to_date') return { title: S('t_up_to_date') };
-  if (st.after === 'purchase') return { title: S('t_unlock_next_episode'), sub: S('t_unlock_with_gems_to_continue'), brand: true, chev: true };
-  if (st.after === 'freepass') return { title: S('t_next_episode'), sub: S('t_free_pass_available'), clock: true, brand: true, chev: true };
-  return { title: S('t_next_episode'), sub: S('t_episode_$ord', { ord: NEXT_ORD }), brand: true, chev: true };
+  if (st.after === 'purchase') return { title: S(`t_unlock_next_${unitOf()}`), sub: S('t_unlock_with_gems_to_continue'), brand: true, chev: true };
+  if (st.after === 'freepass') return { title: S(`t_next_${unitOf()}`), sub: S('t_free_pass_available'), clock: true, brand: true, chev: true };
+  return { title: S(`t_next_${unitOf()}`), sub: ordTitle(NEXT_ORD), brand: true, chev: true };
 }
 
 // Footer/EpisodeCommentPreview (enableEpisodeComments 가 켜진 경우)
@@ -569,7 +590,7 @@ function footerHtml(st, d) {
             <div style="flex:1;display:flex;flex-direction:column;min-width:0">
               <div style="display:flex;flex-direction:column;gap:4px;padding:0 4px">
                 <div style="${T('body3M')}color:${COLOR.textPrimary}">Series Title</div>
-                <div style="${T('body1R')}color:${COLOR.textTertiary}">${S('t_episode_$ord', { ord: CUR_ORD })}</div>
+                <div style="${T('body1R')}color:${COLOR.textTertiary}">${ordTitle(CUR_ORD)}</div>
               </div>
               <div style="flex:1;display:flex;align-items:flex-end;gap:8px">
                 <div style="width:116px;height:40px;border-radius:20px;background:${COLOR.containerBase};display:flex;align-items:center;justify-content:space-between;padding:0 12px">
@@ -621,22 +642,22 @@ function guideHtml(st) {
   return `
     <div class="guide" style="height:${K.guideHeight}px">
       ${ind}
-      <div style="${T('body1R')}color:${COLOR.textDisabled}">${(st.action === 'finished' ? finalText() : isNext ? S('t_keep_scrolling_for_the_next_episode') : S('t_next_episode_coming_soon'))}</div>
-      ${isNext ? `<div style="${T('body3Sb')}color:${COLOR.textDisabled};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${S('t_episode_$ord', { ord: NEXT_ORD })}</div>` : ''}
+      <div style="${T('body1R')}color:${COLOR.textDisabled}">${(st.action === 'finished' ? finalText() : isNext ? S(`t_keep_scrolling_for_the_next_${unitOf()}`) : S('t_next_episode_coming_soon#2'))}</div>
+      ${isNext ? `<div style="${T('body3Sb')}color:${COLOR.textDisabled};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${ordTitle(NEXT_ORD)}</div>` : ''}
     </div>`;
 }
 
 // NextEpisodeRevealGuide
 function revealHtml(st, rtl) {
   const isNext = st.action === 'next';
-  const hint = (st.action === 'finished' ? finalText() : isNext ? S('t_next_episode') : S('t_next_episode_coming_soon'));
+  const hint = (st.action === 'finished' ? finalText() : isNext ? S(`t_next_${unitOf()}`) : S('t_next_episode_coming_soon#2'));
   return `
     <div class="reveal__content" style="width:${K.swipeDistance}px">
       <div class="reveal__hint" style="flex-direction:${rtl ? 'row-reverse' : 'row'}">
         <span style="${T('body2R')}color:${COLOR.textDisabled};flex-shrink:1">${hint}</span>
         ${isNext ? img('ic-chevron-right_16x16.png', 16, 16, COLOR.textDisabled, rtl ? 'transform:scaleX(-1)' : '') : ''}
       </div>
-      ${isNext ? `<div style="${T('body3Sb')}color:${COLOR.textDisabled};display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${S('t_episode_$ord', { ord: NEXT_ORD })}</div>` : ''}
+      ${isNext ? `<div style="${T('body3Sb')}color:${COLOR.textDisabled};display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${ordTitle(NEXT_ORD)}</div>` : ''}
     </div>`;
 }
 
@@ -714,7 +735,7 @@ class Sim {
     const circle = (file, enabled = true) => `<span class="cbtn" style="background:${enabled ? COLOR.containerBase : COLOR.surfaceBase}">${img(file, 20, 20, enabled ? COLOR.textPrimary : COLOR.textDisabled)}</span>`;
     const commentsPill = `<span class="cbtn cbtn--pill" style="background:${COLOR.containerBase}">${img('ic-document-balloon_20x20.png', 20, 20, COLOR.textPrimary)}<span style="${T('body2R')}color:${COLOR.textPrimary}">128</span></span>`;
     const prevNext = `${circle('ic-chevron-left_20x20.png')}${circle('ic-chevron-right_20x20.png', hasNext)}`;
-    const epTitle = S('t_episode_$ord', { ord: CUR_ORD });
+    const epTitle = ordTitle(CUR_ORD);
     this.ctlTop.style.height = `${d.top + 56}px`;
     this.ctlBottom.style.height = `${this.bottomInset}px`;
     if (isComic) {
@@ -864,7 +885,7 @@ class Sim {
 
   updateStatus(text, go) {
     let t = text; let g = go;
-    if (!t && this.moved) { t = `${S('t_episode_$ord', { ord: NEXT_ORD })}로 이동함`; g = true; }
+    if (!t && this.moved) { t = `${ordTitle(NEXT_ORD)}로 이동함`; g = true; }
     if (!t) {
       if (this.v.mode === 'scroll') {
         if (!this.hasPull) t = this.offset >= this.max - 1 ? '회차 끝 · 더 스크롤되지 않음' : '읽는 중';
@@ -1156,7 +1177,7 @@ class Sim {
     this.nextEl.innerHTML = `
       <div class="next-screen__first">${first}</div>
       <div class="next-screen__note" style="bottom:${K.freePassToastBottom + 64}px">
-        <span>${S('t_episode_$ord', { ord: NEXT_ORD })}로 이동했어요</span>
+        <span>${ordTitle(NEXT_ORD)}로 이동했어요</span>
         <button class="again" type="button">${CUR_ORD}화 끝으로 돌아가 다시 해보기</button>
       </div>`;
     requestAnimationFrame(() => this.nextEl.classList.add('on'));
@@ -1206,7 +1227,7 @@ class Sim {
          <div style="${tx(14, 19, 400)}color:#737885;text-align:center;max-width:320px;align-self:center;margin-bottom:30px">${S('t_you_re_all_set_we_ll_notify_you_when_the_next_episode_is_available')}</div>
          <button class="dialog__btn" data-act="close" style="border-radius:8px;height:48px;background:${COLOR.containerBrand};${tx(14, 21, 600)}">${S('t_okay')}</button>`
       : `${title(0)}
-         <div style="${T('body2R')}color:${COLOR.textSecondary};text-align:center;align-self:center;margin:12px 0 32px;white-space:pre-line">${S('t_next_episode_coming_soon')}\n${S('t_turn_on_notifications_to_stay_updated')}</div>
+         <div style="${T('body2R')}color:${COLOR.textSecondary};text-align:center;align-self:center;margin:12px 0 32px;white-space:pre-line">${S(`t_next_${unitOf()}_coming_soon`)}\n${S('t_turn_on_notifications_to_stay_updated')}</div>
          <button class="dialog__btn" data-act="notify" style="border-radius:6px;padding:13.5px 0;background:${COLOR.containerBrand};${tx(14, 21, 600)}">${S('t_notify_me')}</button>`;
     this.openLayer(`
       <div class="dim dim--modal" style="background:rgba(0,0,0,.9)"></div>
@@ -1227,14 +1248,14 @@ class Sim {
   // 완결 작품 마지막 화: DefaultDialog2 (You've finished it! + Okay), Figma 580:7716
   openFinishedDialog() {
     const width = this.d.tablet ? '327px' : '85%';
-    const body = S(`t_you_ve_read_every_${unitOf()}_of_$title_find_your_next_stories_on_manta`, { title: 'Series Title' });
+    const body = S(`t_you_ve_read_every_${unitOf()}_of_$title_find_your_next_story_on_manta`, { title: 'Series Title' });
     this.openLayer(`
       <div class="dim dim--modal" style="background:rgba(0,0,0,.9)"></div>
       <div class="dialog-wrap">
         <div class="dialog" style="width:${width};background:${COLOR.popupGray01}">
           <div style="${T('title1Sb')}color:#FFFFFF;text-align:center;max-width:275px;align-self:center;margin-bottom:12px">${S('t_you_ve_finished_it')}</div>
           <div style="${tx(14, 19, 400)}color:#737885;text-align:center;max-width:320px;align-self:center;margin-bottom:30px;white-space:pre-line">${body}</div>
-          <button class="dialog__btn" data-act="close" style="border-radius:8px;height:48px;background:${COLOR.containerBrand};${tx(14, 21, 600)}">${S('t_okay')}</button>
+          <button class="dialog__btn" data-act="close" style="border-radius:8px;height:48px;background:${COLOR.containerBrand};${tx(14, 21, 600)}">${S('t_okay#2')}</button>
         </div>
       </div>`, () => log(this.name, '다이얼로그 바깥 탭 → 닫히지 않음'));
     this.layer.querySelector('[data-act="close"]').addEventListener('click', (e) => {
@@ -1268,7 +1289,7 @@ class Sim {
               <div style="width:70px;height:50px;padding:3px;flex:none"><div class="ep-thumb" style="width:64px;height:44px;border-radius:3px"></div></div>
               <div style="flex:1;margin:0 4px 0 8px;min-width:0">
                 <div style="${T('body2Sb')}color:#FFFFFF">${S('t_single_episode')}</div>
-                <div style="${tx(10, 14, 400)}color:#737885;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${S('t_episode_$ord', { ord })}</div>
+                <div style="${tx(10, 14, 400)}color:#737885;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ordTitle(ord)}</div>
               </div>
             </div>
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">

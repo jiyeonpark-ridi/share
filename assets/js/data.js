@@ -38,7 +38,8 @@ function normalizeWork(project, work) {
   return {
     ...work,
     // url이 있으면 외부 주소, 없으면 works/<프로젝트>/<작업물>/index.html
-    src: work.url || new URL(`works/${project.id}/${work.id}/`, ROOT).href,
+    // 사이트 안(iframe)에서 브라우저 캐시에 남은 옛 화면이 뜨지 않도록 rev(없으면 date)를 주소에 붙인다.
+    src: work.url || new URL(`works/${project.id}/${work.id}/?v=${encodeURIComponent(work.rev || work.date || "")}`, ROOT).href,
   };
 }
 
